@@ -1,0 +1,13 @@
+# macOS
+.DS_Store
+
+# Git configuration (if necessary)
+.vscode/
+.idea/
+
+# Python (syllabus_engine という名から推測)
+__pycache__/
+*.py[cod]
+.venv/
+env/
+.env
