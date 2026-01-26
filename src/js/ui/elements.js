@@ -1,0 +1,18 @@
+export const elements = {
+    timetableGrid: document.getElementById('timetableGrid'),
+    searchResults: document.getElementById('searchResults'),
+    searchInput: document.getElementById('searchInput'),
+    deptFilter: document.getElementById('deptFilter'),
+    gradeFilter: document.getElementById('gradeFilter'),
+    dayFilter: document.getElementById('dayFilter'),
+    periodFilter: document.getElementById('periodFilter'),
+    tabContainer: document.getElementById('tabContainer'),
+    resultsCount: document.getElementById('resultsCount'),
+    strictModeToggle: document.getElementById('strictModeToggle'),
+    printHeader: document.getElementById('printHeader'),
+    printPlanName: document.getElementById('printPlanName'),
+    shareTwitter: document.getElementById('shareTwitter'),
+    shareLine: document.getElementById('shareLine'),
+    socialShare: document.getElementById('socialShare'),
+    termButtons: document.querySelectorAll('.term-btn'),
+};

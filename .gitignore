@@ -1,0 +1,22 @@
+# macOS
+.DS_Store
+
+# IDEs
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+env/
+.env
+
+# Source code (hide from GitHub)
+scripts/
+*.py
+requirements.txt
+
+# Raw data
+data/

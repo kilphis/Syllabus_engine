@@ -1,0 +1,527 @@
+ <script>
+        let allLectures = [];
+        // Data Structure: { plans: { "案1": [], "案2": [], "案3": [] }, currentPlan: "案1" }
+        let timetableData = {
+            plans: { "案1": [], "案2": [], "案3": [] },
+            currentPlan: "案1"
+        };
+
+        // Migration & Initialization
+        const savedData = localStorage.getItem('myTimetableData');
+        if (savedData) {
+            timetableData = JSON.parse(savedData);
+        } else {
+            // Migrate old data if exists
+            const oldData = localStorage.getItem('myTimetable');
+            if (oldData) {
+                timetableData.plans["案1"] = JSON.parse(oldData);
+                localStorage.removeItem('myTimetable'); // Cleanup old key
+            }
+            saveData();
+        }
+
+        let activeTerms = ['T1']; // Default: T1 selected
+        let isStrictMode = false;
+
+        const timetableGrid = document.getElementById('timetableGrid');
+        const searchResults = document.getElementById('searchResults');
+        const searchInput = document.getElementById('searchInput');
+
+        // Filters
+        const deptFilter = document.getElementById('deptFilter');
+        const gradeFilter = document.getElementById('gradeFilter');
+        const dayFilter = document.getElementById('dayFilter');
+        const periodFilter = document.getElementById('periodFilter');
+
+        // Dept Code Map for Syllabus URL
+        const deptCodeMap = {
+            "文学部": "05",
+            "教育学部": "07",
+            "教育学研究科": "08",
+            "法学部": "15",
+            "理学部": "22",
+            "工学部": "25",
+            "情報融合学環": "26",
+            "医学部": "42",
+            "薬学部": "44",
+            "保健学教育部": "45",
+            "自然科学教育部": "51",
+            "多言語文化総合教育センター": "54",
+            "社会文化科学教育部": "56",
+            "教養教育": "58",
+            "教養教育（大学院）": "59",
+            "医学教育部": "68",
+            "薬学教育部": "69",
+            "養護教諭特別別科": "72",
+            "特別支援教育特別専攻科": "73"
+        };
+
+        // Term Mapping for Normalization
+        const TERM_MAP = {
+            '前期': ['T1', 'T2'],
+            '後期': ['T3', 'T4']
+        };
+
+        // 初期化：データの読み込み
+        fetch('./data/cleaned_lectures.json')
+            .then(res => res.json())
+            .then(data => {
+                allLectures = data;
+                initFilters();
+                updateTermButtons(); // Initialize button styles
+
+                // Check for shared plan in URL
+                checkForSharedPlan();
+
+                renderAll();
+            })
+            .catch(err => {
+                console.error("Failed to load lecture data:", err);
+                document.getElementById('timetableGrid').innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center text-red-500 py-8 font-bold">
+                            データの読み込みに失敗しました。<br>
+                            <span class="text-sm font-normal text-slate-500">ページを再読み込みするか、管理者にお問い合わせください。</span>
+                        </td>
+                    </tr>
+                `;
+            });
+
+        function saveData() {
+            try {
+                localStorage.setItem('myTimetableData', JSON.stringify(timetableData));
+            } catch (e) {
+                console.error("Failed to save data to localStorage:", e);
+                alert("データの保存に失敗しました。ローカルストレージの容量が一杯か、無効化されている可能性があります。");
+            }
+        }
+
+        function checkForSharedPlan() {
+            const params = new URLSearchParams(window.location.search);
+            const sharedPlanCompressed = params.get('plan');
+
+            if (sharedPlanCompressed) {
+                try {
+                    const sharedPlan = decompressPlan(sharedPlanCompressed);
+                    if (Array.isArray(sharedPlan) && confirm("共有された時間割が見つかりました。「共有」タブにインポートしますか？\n(既存の「共有」タブの内容は上書きされます)")) {
+                        timetableData.plans["共有"] = sharedPlan;
+                        timetableData.currentPlan = "共有";
+                        saveData();
+                        // Remove query param from URL without reload
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                    }
+                } catch (e) {
+                    console.error("Failed to parse shared plan", e);
+                    alert("共有された時間割データの読み込みに失敗しました。");
+                }
+            }
+        }
+
+        function generateShareUrl() {
+            const currentData = timetableData.plans[timetableData.currentPlan];
+            if (!currentData || currentData.length === 0) {
+                alert("共有する講義が選択されていません。");
+                return;
+            }
+
+            const compressed = compressPlan(currentData);
+            const url = `${window.location.origin}${window.location.pathname}?plan=${compressed}`;
+
+            navigator.clipboard.writeText(url).then(() => {
+                alert("共有用URLをクリップボードにコピーしました！");
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                prompt("以下のURLをコピーしてください:", url);
+            });
+        }
+
+        // --- Compression / Decompression Logic ---
+
+        function compressPlan(lectureIds) {
+            // 1. Map full IDs to short IDs: "工学部_12345" -> "25:12345"
+            const shortIds = lectureIds.map(id => {
+                const [deptName, lectureId] = id.split('_');
+                const deptCode = deptCodeMap[deptName];
+                if (deptCode) {
+                    return `${deptCode}:${lectureId}`;
+                }
+                return id; // Fallback if dept not found
+            });
+
+            // 2. Stringify and Compress
+            const json = JSON.stringify(shortIds);
+            return LZString.compressToEncodedURIComponent(json);
+        }
+
+        function decompressPlan(compressed) {
+            // 1. Decompress
+            const json = LZString.decompressFromEncodedURIComponent(compressed);
+            if (!json) throw new Error("Decompression failed");
+
+            const shortIds = JSON.parse(json);
+
+            // 2. Map short IDs back to full IDs: "25:12345" -> "工学部_12345"
+            // Create reverse map for lookup
+            const codeToDeptMap = Object.entries(deptCodeMap).reduce((acc, [name, code]) => {
+                acc[code] = name;
+                return acc;
+            }, {});
+
+            return shortIds.map(shortId => {
+                if (shortId.includes(':')) {
+                    const [code, id] = shortId.split(':');
+                    const deptName = codeToDeptMap[code];
+                    if (deptName) {
+                        return `${deptName}_${id}`;
+                    }
+                }
+                return shortId; // Fallback
+            });
+        }
+
+        function printTimetable() {
+            const originalTitle = document.title;
+            const currentPlan = timetableData.currentPlan;
+            document.title = `クマダイ時間割_${currentPlan}_2025`;
+
+            window.print();
+
+            // Restore title after print dialog is closed
+            // Note: onafterprint support varies, but is generally good in modern browsers
+            window.onafterprint = () => {
+                document.title = originalTitle;
+                window.onafterprint = null; // Cleanup
+            };
+
+            // Fallback for browsers that don't block or support onafterprint well
+            setTimeout(() => {
+                document.title = originalTitle;
+            }, 1000);
+        }
+
+        // Alias for the button onclick (renaming the function in HTML would be cleaner but this works with minimal diff)
+        // Actually, let's update the HTML onclick to printTimetable() for clarity.
+        // Wait, I already updated the button text, let me update the onclick in the HTML chunk above? 
+        // No, I missed updating the onclick in the previous chunk. I will do it here via a separate replace or just define downloadAsImage as printTimetable.
+        // Better to rename properly. I will update the HTML onclick in a separate tool call or just map it here if I can't edit HTML again easily.
+        // I can edit HTML. I'll update the onclick in the HTML chunk.
+        // Ah, I see I didn't update the onclick in the HTML chunk above. I only updated the text.
+        // Let me fix that in the HTML chunk if possible? No, I can't edit the previous chunk now.
+        // I will just define downloadAsImage as printTimetable for now to ensure it works, 
+        // OR I can issue another replace for the onclick.
+        // Let's replace the function definition and also update the onclick in the HTML in a separate call if needed.
+        // Actually, I can just replace the function name in the HTML in a separate chunk in this same call?
+        // Yes, I can add another chunk for the onclick.
+
+        // Defining the new function
+        window.printTimetable = printTimetable;
+
+        // Removing the old function
+        // function downloadAsImage() { ... }
+
+        function initFilters() {
+            const depts = new Set();
+            allLectures.forEach(l => {
+                if (l.dept) depts.add(l.dept);
+            });
+            Array.from(depts).sort().forEach(d => {
+                const option = document.createElement('option');
+                option.value = d;
+                option.textContent = d;
+                deptFilter.appendChild(option);
+            });
+
+            // Add event listeners for filters
+            [deptFilter, gradeFilter, dayFilter, periodFilter].forEach(el => {
+                el.addEventListener('change', handleSearch);
+            });
+        }
+
+        function renderAll() {
+            renderTabs();
+            renderGrid();
+            handleSearch();
+        }
+
+        function renderTabs() {
+            const tabContainer = document.getElementById('tabContainer');
+            if (!tabContainer) return;
+
+            // Ensure "共有" exists in plans if it's the current plan or has data
+            const allPlans = ["案1", "案2", "案3"];
+            if (timetableData.plans["共有"] || timetableData.currentPlan === "共有") {
+                allPlans.push("共有");
+                if (!timetableData.plans["共有"]) timetableData.plans["共有"] = [];
+            }
+
+            tabContainer.innerHTML = allPlans.map(plan => {
+                const isActive = plan === timetableData.currentPlan;
+                const count = timetableData.plans[plan] ? timetableData.plans[plan].length : 0;
+                return `
+                    <button onclick="switchTab('${plan}')" 
+                        class="px-4 py-2 text-sm font-bold transition-colors border-b-4 ${isActive ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'}">
+                        ${plan} <span class="text-xs font-normal ml-1 text-slate-400">(${count})</span>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function switchTab(planName) {
+            timetableData.currentPlan = planName;
+            saveData();
+            renderAll();
+        }
+
+        // グリッド（時間割）の描画
+        function renderGrid() {
+            timetableGrid.innerHTML = '';
+            const days = 5; // 月〜金
+            const slots = 5; // 1〜5限
+
+            const currentSelectedIds = timetableData.plans[timetableData.currentPlan];
+
+            for (let t = 1; t <= slots; t++) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td class="text-center font-bold text-slate-400 border-b border-r border-slate-100">${t}</td>`;
+
+                for (let d = 1; d <= days; d++) {
+                    const td = document.createElement('td');
+                    td.className = 'border-b border-r border-slate-100 p-1 h-24 vertical-top relative align-top';
+                    td.id = `cell-${d}-${t}`;
+
+                    // Flex container for cell content
+                    const cellContent = document.createElement('div');
+                    cellContent.className = 'flex flex-col gap-1 h-full overflow-hidden';
+                    td.appendChild(cellContent);
+
+                    // 選択された講義を配置 (Composite Key Check)
+                    const matches = allLectures.filter(l =>
+                        currentSelectedIds.includes(`${l.dept}_${l.id}`) &&
+                        l.periods.some(p => p.day === d && p.time === t)
+                    );
+
+                    matches.forEach(m => {
+                        const div = document.createElement('div');
+                        div.className = `text-[10px] leading-tight p-1.5 rounded shadow-sm cursor-pointer flex-shrink-0 ${matches.length > 1 ? 'conflict' : 'cell-active'}`;
+                        div.innerHTML = `
+                            <div class="font-bold truncate">${m.title}</div>
+                            <div class="truncate text-slate-600">${m.teacher ? m.teacher.split(',')[0] : ''}</div>
+                            <a href="${getSyllabusUrl(m)}" target="_blank" onclick="event.stopPropagation()" class="text-blue-700 hover:underline block mt-0.5 font-bold text-[9px] text-right">シラバス ></a>
+                        `;
+                        div.onclick = (e) => { e.stopPropagation(); toggleLecture(m.dept, m.id); };
+                        cellContent.appendChild(div);
+                    });
+
+                    tr.appendChild(td);
+                }
+                timetableGrid.appendChild(tr);
+            }
+        }
+
+        // 検索処理 (Multi-Select Strict/Inclusive Filtering)
+        function handleSearch() {
+            const query = searchInput.value.toLowerCase();
+            const deptVal = deptFilter.value;
+            const gradeVal = gradeFilter.value;
+            const dayVal = dayFilter.value;
+            const periodVal = periodFilter.value;
+
+            const currentSelectedIds = timetableData.plans[timetableData.currentPlan];
+
+            // Prepare Effective Terms based on Mode
+            // Note: Logic is now delegated to isTermMatch, but we still need effectiveTerms for Badge display if needed.
+            // For Badge display, we can just use activeTerms and let the badge logic handle it, 
+            // OR we can keep expanding it for the badge only.
+            // Let's keep the expansion logic for the badge display consistency for now, 
+            // but the filtering itself will use the robust isTermMatch.
+            let displayTerms = [];
+            if (isStrictMode) {
+                displayTerms = [...activeTerms];
+            } else {
+                activeTerms.forEach(t => {
+                    displayTerms.push(t);
+                    if (TERM_MAP[t]) displayTerms.push(...TERM_MAP[t]);
+                });
+                displayTerms = [...new Set(displayTerms)];
+            }
+
+
+            // Filter Logic
+            const filtered = allLectures.filter(l => {
+                // 1. Period Check (Normalized Logic)
+                if (activeTerms.length === 0) return false;
+                if (!isTermMatch(l.tags, activeTerms, isStrictMode)) return false;
+
+                // 2. Text Search (Partial match)
+                const matchesQuery = query === '' ||
+                    l.title.toLowerCase().includes(query) ||
+                    (l.teacher && l.teacher.toLowerCase().includes(query));
+
+                // 3. Attribute Filters
+                const matchesDept = deptVal === '' || l.dept === deptVal;
+                const matchesGrade = gradeVal === '' || l.grade == gradeVal;
+
+                const matchesDayPeriod = (dayVal === '' && periodVal === '') ||
+                    l.periods.some(p =>
+                        (dayVal === '' || p.day == dayVal) &&
+                        (periodVal === '' || p.time == periodVal)
+                    );
+
+                return matchesQuery && matchesDept && matchesGrade && matchesDayPeriod;
+            }).slice(0, 50); // Limit to 50 for performance
+
+            document.getElementById('resultsCount').innerText = `${filtered.length}件表示中`;
+
+            if (filtered.length === 0) {
+                searchResults.innerHTML = `<div class="text-center text-slate-400 py-8">条件に一致する講義が見つかりませんでした</div>`;
+                return;
+            }
+
+            // Render Results
+            searchResults.innerHTML = filtered.map(l => {
+                const compositeKey = `${l.dept}_${l.id}`;
+                const isSelected = currentSelectedIds.includes(compositeKey);
+                const url = getSyllabusUrl(l);
+
+                // Badge: Show the matching term(s) from displayTerms
+                const matchingTags = l.tags ? l.tags.filter(t => displayTerms.includes(t)) : [];
+                const badgeHtml = matchingTags.slice(0, 2).map(t =>
+                    `<span class="inline-block bg-blue-600 text-white text-[10px] px-2 py-0.5 rounded-full mr-1 mb-1 font-bold">${t}</span>`
+                ).join('');
+
+                return `
+                <div onclick="toggleLecture('${l.dept}', '${l.id}')" 
+                     class="p-3 border rounded-xl cursor-pointer transition-all duration-200 hover:border-blue-500 relative 
+                     ${isSelected ? 'bg-blue-100 border-blue-500' : 'bg-white border-slate-200'}">
+                    
+                    ${isSelected ? '<span class="absolute top-2 right-2 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">追加済み</span>' : ''}
+                    
+                    <div class="mb-1">${badgeHtml}</div>
+                    <div class="text-sm font-bold text-slate-800">${l.title}</div>
+                    <div class="text-xs text-slate-500">${l.teacher || ''}</div>
+                    <div class="text-xs text-slate-400 mt-1 flex gap-2 items-center">
+                        <span>${l.dept || '-'}</span>
+                        <span>${l.grade ? l.grade + '年' : '-'}</span>
+                        <a href="${url}" target="_blank" onclick="event.stopPropagation()" class="text-blue-600 hover:underline ml-auto">シラバス ></a>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        // 講義の選択/解除 (Composite Key - Unified Signature)
+        function toggleLecture(dept, id) {
+            const compositeKey = `${dept}_${id}`;
+            const currentPlan = timetableData.currentPlan;
+            let currentSelectedIds = timetableData.plans[currentPlan];
+
+            if (currentSelectedIds.includes(compositeKey)) {
+                timetableData.plans[currentPlan] = currentSelectedIds.filter(k => k !== compositeKey);
+            } else {
+                timetableData.plans[currentPlan].push(compositeKey);
+            }
+            saveData();
+            renderAll();
+        }
+
+        // Toggle Single Term (T1, T2, etc.)
+        function toggleTerm(term) {
+            if (activeTerms.includes(term)) {
+                activeTerms = activeTerms.filter(t => t !== term);
+            } else {
+                activeTerms.push(term);
+            }
+            updateTermButtons();
+            handleSearch();
+        }
+
+        // Toggle Semester (Direct Toggle)
+        function toggleSemester(semester) {
+            if (activeTerms.includes(semester)) {
+                activeTerms = activeTerms.filter(t => t !== semester);
+            } else {
+                activeTerms.push(semester);
+            }
+            updateTermButtons();
+            handleSearch();
+        }
+
+        function toggleStrictMode() {
+            isStrictMode = document.getElementById('strictModeToggle').checked;
+            handleSearch();
+        }
+
+        function resetTimetable() {
+            if (confirm(`「${timetableData.currentPlan}」の講義をすべてリセットしますか？`)) {
+                timetableData.plans[timetableData.currentPlan] = [];
+                saveData();
+                renderAll();
+            }
+        }
+
+        function updateTermButtons() {
+            const buttons = document.querySelectorAll('.term-btn');
+            buttons.forEach(btn => {
+                const term = btn.getAttribute('data-term');
+                // Highlight ONLY if explicitly in activeTerms
+                const isActive = activeTerms.includes(term);
+
+                if (isActive) {
+                    btn.className = 'term-btn px-3 py-1 rounded-full text-sm font-bold transition-all shadow-md bg-blue-600 text-white border-blue-600 transform scale-105';
+                } else {
+                    btn.className = 'term-btn px-3 py-1 rounded-full text-sm font-medium transition-colors border bg-slate-100 text-slate-400 border-slate-200 hover:bg-slate-200';
+                }
+            });
+        }
+
+        function getSyllabusUrl(lecture) {
+            const deptCode = deptCodeMap[lecture.dept] || '26';
+            return `https://syllabus.kumamoto-u.ac.jp/pub/syllabus.html?locale=ja&nendo=2025&jikanwari_shozokucd=${deptCode}&jikanwaricd=${lecture.id}`;
+        }
+
+        function isTermMatch(lectureTags, activeTerms, strictMode) {
+            if (!lectureTags || lectureTags.length === 0) return false;
+
+            if (strictMode) {
+                // Strict Mode: Intersection of lectureTags and activeTerms
+                return lectureTags.some(tag => activeTerms.includes(tag));
+            } else {
+                // Inclusive Mode:
+                // If activeTerms includes '前期', match if lectureTags has '前期', 'T1', or 'T2'.
+                // If activeTerms includes 'T1', match if lectureTags has 'T1' OR '前期' (since T1 is part of 前期).
+                // Wait, the requirement says:
+                // "activeTerms を TERM_MAP で展開した後の集合と、lectureTags に共通要素があるか"
+
+                // Expand activeTerms
+                const expandedActiveTerms = new Set();
+                activeTerms.forEach(t => {
+                    expandedActiveTerms.add(t);
+                    if (TERM_MAP[t]) {
+                        TERM_MAP[t].forEach(sub => expandedActiveTerms.add(sub));
+                    }
+                });
+
+                // Also, if I select "T1", should it match "前期" tagged lectures?
+                // Usually yes, because "前期" implies T1+T2.
+                // But the previous logic was: expand '前期' -> T1, T2.
+                // If I select T1, it stays T1.
+                // Lecture '前期' has tag '前期'. Intersection of [T1] and ['前期'] is empty.
+                // So T1 selection didn't show '前期' lectures in the old logic?
+                // Let's check the old logic:
+                // effectiveTerms = [T1]. lecture.tags = ['前期']. Intersection? No.
+
+                // However, usually users expect T1 filter to show '前期' lectures too?
+                // The user prompt said: "activeTerms を TERM_MAP で展開した後の集合と、lectureTags に共通要素があるか"
+                // So if I select '前期', it expands to ['前期', 'T1', 'T2'].
+                // Lecture with 'T1' matches. Lecture with '前期' matches.
+
+                // If I select 'T1', it expands to ['T1'].
+                // Lecture with '前期' (tags=['前期']) -> No match.
+                // This seems to be the requested behavior ("Normalization").
+
+                return lectureTags.some(tag => expandedActiveTerms.has(tag));
+            }
+        }
+
+        searchInput.addEventListener('input', handleSearch);
+    </script>

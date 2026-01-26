@@ -1,0 +1,104 @@
+<style>
+        .cell-active {
+            background-color: #dcfce7;
+            border-left: 4px solid #16a34a;
+        }
+
+        .conflict {
+            background-color: #fee2e2;
+            border-left: 4px solid #dc2626;
+        }
+
+        /* Custom scrollbar for table */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        @media print {
+            @page {
+                size: A4 landscape;
+                margin: 10mm;
+            }
+
+            body {
+                background: white;
+                width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            /* Hide unnecessary elements */
+            header,
+            .md\:col-span-4,
+            #tabContainer,
+            .flex.gap-2.pb-1,
+            .mt-4.p-4.bg-blue-50 {
+                display: none !important;
+            }
+
+            /* Maximize Main Content */
+            .max-w-7xl {
+                max-width: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            .grid {
+                display: block !important;
+            }
+
+            .md\:col-span-8 {
+                width: 100% !important;
+            }
+
+            /* Table Styling for Print */
+            .bg-white.rounded-b-2xl {
+                border: none !important;
+                box-shadow: none !important;
+                overflow: visible !important;
+            }
+
+            table {
+                width: 100% !important;
+                table-layout: fixed !important;
+                border-collapse: collapse !important;
+            }
+
+            th,
+            td {
+                border: 1px solid #000 !important;
+                color: #000 !important;
+            }
+
+            /* Ensure background colors print */
+            .cell-active,
+            .conflict {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                border: 1px solid #000 !important;
+                /* Force border on cells */
+            }
+
+            /* Typography */
+            .text-\[10px\] {
+                font-size: 10pt !important;
+                /* Increase font size */
+            }
+
+            .font-bold.truncate {
+                font-size: 12pt !important;
+                white-space: normal !important;
+                /* Allow wrapping */
+            }
+
+            /* Hide Syllabus Link in Print */
+            a[href*="syllabus"] {
+                display: none !important;
+            }
+        }
+    </style>
