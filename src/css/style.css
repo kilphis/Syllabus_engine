@@ -259,3 +259,15 @@
     line-height: 1.1;
     color: #0f172a;
 }
+
+/* html2canvas Fixes for Wallpaper */
+#wallpaper-export-root * {
+    overflow: visible !important;
+    white-space: normal !important;
+}
+
+#wallpaper-export-root .truncate {
+    overflow: visible !important;
+    white-space: normal !important;
+    text-overflow: clip !important;
+}

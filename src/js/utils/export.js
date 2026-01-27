@@ -96,13 +96,29 @@ export async function generateWallpaper(allLectures, timetableData) {
         table.appendChild(tbody);
 
         // Capture
+        window.scrollTo(0, 0); // Prevent offset issues
+
+        // Temporarily remove overflow-hidden and truncate classes for capture
+        const hiddenElements = wallpaperExportRoot.querySelectorAll('.overflow-hidden, .truncate');
+        const originalClasses = new Map();
+        hiddenElements.forEach(el => {
+            originalClasses.set(el, el.className);
+            el.classList.remove('overflow-hidden', 'truncate');
+        });
+
         const canvas = await html2canvas(wallpaperExportRoot, {
             scale: 2,
             useCORS: true,
             allowTaint: true,
+            logging: true, // Enable logging for debugging
             backgroundColor: null,
             width: 360,
             height: 640,
+        });
+
+        // Restore classes
+        hiddenElements.forEach(el => {
+            el.className = originalClasses.get(el);
         });
 
         const dataUrl = canvas.toDataURL('image/png');
