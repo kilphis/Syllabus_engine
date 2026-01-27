@@ -2,8 +2,8 @@ import json
 import os
 
 # 入出力設定
-INPUT_FILE = "data/raw_details.json"
-OUTPUT_FILE = "data/cleaned_lectures.json"
+INPUT_FILE = "../data/raw_details.json"
+OUTPUT_FILE = "../data/cleaned_lectures.json"
 
 def map_semester(semes_value):
     s = str(semes_value)
