@@ -100,3 +100,25 @@
         display: none !important;
     }
 }
+
+/* Mobile Adjustments */
+@media (max-width: 768px) {
+    #timetableGrid td {
+        font-size: 10px !important;
+        padding: 2px !important;
+    }
+
+    .font-bold.truncate {
+        white-space: normal !important;
+        display: -webkit-box !important;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        line-height: 1.1;
+    }
+
+    .cell-active,
+    .conflict {
+        padding: 4px !important;
+    }
+}

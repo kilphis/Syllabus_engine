@@ -7,6 +7,7 @@ import { printTimetable } from './utils/print.js';
 import { generateShareUrl, checkForSharedPlan } from './utils/share.js';
 import { toggleTerm as utilsToggleTerm, toggleSemester as utilsToggleSemester, updateTermButtons } from './utils/filters.js';
 import { initFilters } from './ui/filters.js';
+import { exportToImage } from './utils/export.js';
 
 // --- Global Orchestration ---
 
@@ -71,6 +72,7 @@ window.generateShareUrl = generateShareUrl;
 window.printTimetable = printTimetable;
 window.switchTab = switchTab; // Already exposed in grid.js but good to be explicit
 window.loadMore = loadMore;   // Already exposed in search.js
+window.exportToImage = exportToImage;
 
 // --- Initialization ---
 

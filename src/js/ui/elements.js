@@ -14,5 +14,8 @@ export const elements = {
     shareTwitter: document.getElementById('shareTwitter'),
     shareLine: document.getElementById('shareLine'),
     socialShare: document.getElementById('socialShare'),
+    shareSocial: document.getElementById('socialShare'),
     termButtons: document.querySelectorAll('.term-btn'),
+    exportModal: document.getElementById('exportModal'),
+    exportImage: document.getElementById('exportImage'),
 };
