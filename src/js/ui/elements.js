@@ -18,4 +18,5 @@ export const elements = {
     termButtons: document.querySelectorAll('.term-btn'),
     exportModal: document.getElementById('exportModal'),
     exportImage: document.getElementById('exportImage'),
+    wallpaperExportRoot: document.getElementById('wallpaper-export-root'),
 };

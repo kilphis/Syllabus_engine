@@ -123,6 +123,11 @@
                             title="画像として保存">
                             <span>📷</span> 画像保存
                         </button>
+                        <button id="wallpaperBtn"
+                            class="text-xs flex items-center gap-1 bg-blue-100 hover:bg-blue-200 text-blue-600 px-2 py-1 rounded transition-colors"
+                            title="壁紙として保存">
+                            <span>📱</span> 壁紙保存
+                        </button>
                     </div>
                 </div>
 
@@ -170,6 +175,30 @@
                     class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-lg font-bold transition-colors">
                     閉じる
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Wallpaper Export Root (Hidden) -->
+    <div id="wallpaper-export-root" class="wallpaper-container"
+        style="position: absolute; top: -9999px; opacity: 0; pointer-events: none;">
+        <div class="wallpaper-content">
+            <div class="wallpaper-header">
+                <div class="wallpaper-title-box">
+                    <div class="wallpaper-plan-name" id="wallpaper-plan-name">案1</div>
+                    <div class="wallpaper-subtitle">My Timetable</div>
+                </div>
+            </div>
+
+            <div class="wallpaper-table-container">
+                <table class="wallpaper-table" id="wallpaper-table">
+                    <!-- Dynamically populated -->
+                </table>
+            </div>
+
+            <div class="wallpaper-footer">
+                <div class="wallpaper-char-space"></div>
+                <div class="wallpaper-pen-decoration"></div>
             </div>
         </div>
     </div>

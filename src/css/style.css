@@ -122,3 +122,140 @@
         padding: 4px !important;
     }
 }
+
+/* Wallpaper Export Styles */
+#wallpaper-export-root {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    width: 360px;
+    height: 640px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+    font-family: 'sans-serif';
+}
+
+.wallpaper-content {
+    width: 100%;
+    height: 100%;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.wallpaper-header {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 20px;
+}
+
+.wallpaper-title-box {
+    background: white;
+    padding: 10px 15px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    border: 2px solid #3b82f6;
+    text-align: right;
+}
+
+.wallpaper-plan-name {
+    font-size: 18px;
+    font-weight: bold;
+    color: #1e40af;
+}
+
+.wallpaper-subtitle {
+    font-size: 10px;
+    color: #64748b;
+}
+
+.wallpaper-table-container {
+    background: white;
+    padding: 10px;
+    border-radius: 16px;
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+    border: 1px solid #e2e8f0;
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+}
+
+.wallpaper-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 8px;
+}
+
+.wallpaper-table th,
+.wallpaper-table td {
+    border: 1px solid #f1f5f9;
+    padding: 2px;
+    height: 80px;
+    vertical-align: top;
+}
+
+.wallpaper-table th {
+    height: 20px;
+    background: #f8fafc;
+    font-weight: bold;
+    color: #64748b;
+}
+
+.wallpaper-footer {
+    height: 100px;
+    position: relative;
+    margin-top: 20px;
+}
+
+.wallpaper-char-space {
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.5);
+    border: 2px dashed #94a3b8;
+    border-radius: 50%;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+}
+
+.wallpaper-pen-decoration {
+    position: absolute;
+    right: 10px;
+    bottom: 20px;
+    width: 60px;
+    height: 8px;
+    background: #3b82f6;
+    border-radius: 4px;
+    transform: rotate(-15deg);
+}
+
+.wallpaper-pen-decoration::after {
+    content: '';
+    position: absolute;
+    left: -10px;
+    top: 0;
+    width: 0;
+    height: 0;
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+    border-right: 10px solid #3b82f6;
+}
+
+/* Wallpaper Cell Styles */
+.wp-cell-active {
+    background-color: #f0fdf4;
+    border-left: 2px solid #22c55e !important;
+}
+
+.wp-conflict {
+    background-color: #fef2f2;
+    border-left: 2px solid #ef4444 !important;
+}
+
+.wp-lecture-title {
+    font-weight: bold;
+    line-height: 1.1;
+    color: #0f172a;
+}
