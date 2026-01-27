@@ -1,6 +1,6 @@
 import { elements } from './elements.js';
-import { getSyllabusUrl } from '../utils/syllabus.js';
-import { timetableData, saveData } from '../store.js';
+import { getSyllabusUrl } from '../syllabus.js';
+import { timetableData, saveStore } from '../store.js';
 
 export function renderGrid(allLectures) {
     const { timetableGrid } = elements;
@@ -76,7 +76,7 @@ export function renderTabs() {
 
 export function switchTab(planName) {
     timetableData.currentPlan = planName;
-    saveData();
+    saveStore();
     // Trigger render update via global function or event
     if (window.renderAll) {
         window.renderAll();

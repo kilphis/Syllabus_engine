@@ -1,6 +1,6 @@
 import { elements } from './elements.js';
 import { isTermMatch } from '../utils/filters.js';
-import { getSyllabusUrl } from '../utils/syllabus.js';
+import { getSyllabusUrl } from '../syllabus.js';
 import { TERM_MAP } from '../constants.js';
 import { timetableData, activeTerms, isStrictMode, allLectures } from '../store.js';
 

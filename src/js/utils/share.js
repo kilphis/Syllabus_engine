@@ -1,4 +1,5 @@
-import { timetableData, saveData, deptCodeMap } from '../store.js';
+import { timetableData, saveStore } from '../store.js';
+import { DEPT_CODE_MAP } from '../constants.js';
 
 export function checkForSharedPlan() {
     const params = new URLSearchParams(window.location.search);
@@ -10,7 +11,7 @@ export function checkForSharedPlan() {
             if (Array.isArray(sharedPlan) && confirm("共有された時間割が見つかりました。「共有」タブにインポートしますか？\n(既存の「共有」タブの内容は上書きされます)")) {
                 timetableData.plans["共有"] = sharedPlan;
                 timetableData.currentPlan = "共有";
-                saveData();
+                saveStore();
                 // Remove query param from URL without reload
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
@@ -43,7 +44,7 @@ export function compressPlan(lectureIds) {
     // 1. Map full IDs to short IDs: "工学部_12345" -> "25:12345"
     const shortIds = lectureIds.map(id => {
         const [deptName, lectureId] = id.split('_');
-        const deptCode = deptCodeMap[deptName];
+        const deptCode = DEPT_CODE_MAP[deptName];
         if (deptCode) {
             return `${deptCode}:${lectureId}`;
         }
@@ -64,7 +65,7 @@ export function decompressPlan(compressed) {
 
     // 2. Map short IDs back to full IDs: "25:12345" -> "工学部_12345"
     // Create reverse map for lookup
-    const codeToDeptMap = Object.entries(deptCodeMap).reduce((acc, [name, code]) => {
+    const codeToDeptMap = Object.entries(DEPT_CODE_MAP).reduce((acc, [name, code]) => {
         acc[code] = name;
         return acc;
     }, {});

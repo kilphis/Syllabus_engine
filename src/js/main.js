@@ -7,6 +7,7 @@ import { printTimetable } from './utils/print.js';
 import { generateShareUrl, checkForSharedPlan } from './utils/share.js';
 import { toggleTerm as utilsToggleTerm, toggleSemester as utilsToggleSemester, updateTermButtons } from './utils/filters.js';
 import { initFilters } from './ui/filters.js';
+
 // --- Global Orchestration ---
 
 // Render everything: Tabs, Grid, Search Results, Term Buttons
@@ -105,7 +106,10 @@ async function initApp() {
     }
 }
 
-
+function initFiltersLocal() {
+    // This function is removed as it's now imported from ui/filters.js
+    // Keeping this comment to ensure no confusion if old code persists
+}
 
 // Start the App
 initApp();
