@@ -19,4 +19,6 @@ export const elements = {
     exportModal: document.getElementById('exportModal'),
     exportImage: document.getElementById('exportImage'),
     wallpaperExportRoot: document.getElementById('wallpaper-export-root'),
+    appVersion: document.getElementById('appVersion'),
+    lastUpdate: document.getElementById('lastUpdate'),
 };

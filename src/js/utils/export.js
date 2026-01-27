@@ -89,10 +89,10 @@ export async function generateWallpaper(allLectures, timetableData) {
                 matches.forEach(m => {
                     const div = document.createElement('div');
                     div.className = `wp-lecture ${matches.length > 1 ? 'wp-conflict' : 'wp-cell-active'}`;
-                    div.style.padding = '4px';
-                    div.style.borderRadius = '4px';
-                    div.style.marginBottom = '2px';
-                    div.innerHTML = `<div class="wp-lecture-title">${m.title}</div>`;
+                    div.innerHTML = `
+                        <div class="wp-lecture-title">${m.title}</div>
+                        <div class="wp-teacher">${m.teacher || ''}</div>
+                    `;
                     td.appendChild(div);
                 });
                 tr.appendChild(td);
@@ -103,6 +103,9 @@ export async function generateWallpaper(allLectures, timetableData) {
 
         // Capture
         window.scrollTo(0, 0); // Prevent offset issues
+
+        // Wait a bit for DOM to settle
+        await new Promise(resolve => setTimeout(resolve, 100));
 
         // Temporarily remove overflow-hidden and truncate classes for capture
         const hiddenElements = wallpaperExportRoot.querySelectorAll('.overflow-hidden, .truncate');
@@ -120,6 +123,16 @@ export async function generateWallpaper(allLectures, timetableData) {
             backgroundColor: null,
             width: 360,
             height: 640,
+            onclone: (clonedDoc) => {
+                const clonedRoot = clonedDoc.getElementById('wallpaper-export-root');
+                if (clonedRoot) {
+                    clonedRoot.style.position = 'relative';
+                    clonedRoot.style.top = '0';
+                    clonedRoot.style.left = '0';
+                    clonedRoot.style.opacity = '1';
+                    clonedRoot.style.pointerEvents = 'auto';
+                }
+            }
         });
 
         // Restore classes
