@@ -13,10 +13,6 @@ venv/
 env/
 .env
 
-# Source code (hide from GitHub)
-scripts/
-*.py
-requirements.txt
 
 # Raw data
 data/
