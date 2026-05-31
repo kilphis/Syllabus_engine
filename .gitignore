@@ -14,5 +14,5 @@ env/
 .env
 
 
-# Raw data
-data/
+# Raw data (root only)
+/data/

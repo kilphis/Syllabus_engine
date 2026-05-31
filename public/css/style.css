@@ -214,12 +214,11 @@
 .wallpaper-char-space {
     width: 80px;
     height: 80px;
-    background: rgba(255, 255, 255, 0.5);
-    border: 2px dashed #94a3b8;
     border-radius: 50%;
     position: absolute;
     left: 0;
     bottom: 0;
+    overflow: hidden;
 }
 
 .wallpaper-pen-decoration {

@@ -15,7 +15,7 @@
 
     <div class="max-w-7xl mx-auto p-2 md:p-4 lg:p-8">
         <header class="mb-8">
-            <h1 class="text-3xl font-extrabold text-slate-800">Timetable Simulator <span
+            <h1 class="text-3xl font-extrabold text-slate-800">熊本大学非公式時間割アプリ <span
                     class="text-sm font-normal text-slate-500">2025 Edition</span></h1>
             <p class="text-slate-600">自分だけの時間割をシミュレーション。選択した講義はブラウザに自動保存されます。</p>
         </header>
@@ -29,7 +29,7 @@
                         <label class="flex items-center cursor-pointer text-xs text-slate-600 hover:text-slate-800">
                             <input type="checkbox" id="strictModeToggle" class="mr-1 accent-blue-600"
                                 onchange="if(window.toggleStrictMode) window.toggleStrictMode()">
-                            <span>厳密モード</span>
+                            <span>期間を厳密に選択する</span>
                         </label>
                     </div>
 
@@ -118,11 +118,7 @@
                             title="印刷 / PDF保存">
                             <span>️🍎</span> 印刷/PDF保存
                         </button>
-                        <button onclick="if(window.exportToImage) window.exportToImage()"
-                            class="text-xs flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-1 rounded transition-colors"
-                            title="画像として保存">
-                            <span>📷</span> 画像保存
-                        </button>
+                        <!--画像保存ボタンがあった場所-->
                         <button id="wallpaperBtn"
                             class="text-xs flex items-center gap-1 bg-blue-100 hover:bg-blue-200 text-blue-600 px-2 py-1 rounded transition-colors"
                             title="壁紙として保存">
@@ -197,7 +193,10 @@
             </div>
 
             <div class="wallpaper-footer">
-                <div class="wallpaper-char-space"></div>
+                <div class="wallpaper-char-space">
+                    <img src="./data/ゆるキャラ.jpg" alt="Character"
+                        style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                </div>
                 <div class="wallpaper-pen-decoration"></div>
             </div>
         </div>
@@ -206,18 +205,23 @@
     <footer class="mt-12 py-10 border-t border-slate-200 bg-white/50 backdrop-blur-sm print:hidden">
         <div class="max-w-7xl mx-auto px-4 text-center">
             <div class="flex justify-center flex-wrap gap-8 mb-6">
-                <a href="https://github.com/あなたのID" target="_blank"
+                <a href="https://github.com/kilphis/release_KMDI_timetable" target="_blank"
                     class="flex items-center gap-2 text-slate-500 hover:text-blue-600 transition-colors font-medium">
                     <span class="text-lg">GitHub</span>
                 </a>
-                <a href="mailto:your-email@kumamoto-u.ac.jp"
+                <a href="https://docs.google.com/forms/d/e/1FAIpQLSeck0NLwS5-R0kFzdxHvJlPDCKxDreAJfMhHWmTu7YPHr-Lnw/viewform?usp=publish-editor"
+                    target="_blank"
                     class="flex items-center gap-2 text-slate-500 hover:text-blue-600 transition-colors font-medium">
-                    <span class="text-lg">Contact / Bug Report</span>
+                    <span class="text-lg">お問い合わせはこちら | google.com/forms</span>
+                </a>
+                <a href="mailto:258x1143@st.kumamoto-u.ac.jp"
+                    class="flex items-center gap-2 text-slate-500 hover:text-blue-600 transition-colors font-medium">
+                    <span class="text-lg">Contact | 258x1143@st.kumamoto-u.ac.jp</span>
                 </a>
             </div>
             <div class="space-y-1 text-slate-400">
                 <p class="text-xs">Version: <span id="appVersion">1.0.0</span> | Data Updated: <span
-                        id="lastUpdate">2025/10/20</span></p>
+                        id="lastUpdate">2026/01/27</span></p>
                 <p class="text-[10px] uppercase tracking-widest">© 2026 Developed by B. For Kumamoto University Students
                 </p>
             </div>
