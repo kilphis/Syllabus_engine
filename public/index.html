@@ -169,26 +169,28 @@
                 <button onclick="document.getElementById('courseCodeModal').classList.add('hidden')"
                     class="text-slate-400 hover:text-slate-600 text-xl">✕</button>
             </div>
-            <div class="overflow-y-auto flex-1 mb-4">
-                <table class="w-full text-left">
+            <div class="overflow-x-auto overflow-y-auto flex-1 mb-4">
+                <table class="w-full border-collapse text-sm">
                     <thead class="bg-slate-50 sticky top-0">
                         <tr>
-                            <th class="px-3 py-2 text-xs font-bold text-slate-500">授業コード</th>
-                            <th class="px-3 py-2 text-xs font-bold text-slate-500">科目名</th>
-                            <th class="px-3 py-2 text-xs font-bold text-slate-500">教員名</th>
-                            <th class="px-3 py-2 text-xs font-bold text-slate-500">曜日・時限</th>
+                            <th class="px-3 py-2 text-xs font-bold text-slate-500 border border-slate-100"></th>
+                            <th class="px-3 py-2 text-xs font-bold text-slate-500 border border-slate-100 text-center">月</th>
+                            <th class="px-3 py-2 text-xs font-bold text-slate-500 border border-slate-100 text-center">火</th>
+                            <th class="px-3 py-2 text-xs font-bold text-slate-500 border border-slate-100 text-center">水</th>
+                            <th class="px-3 py-2 text-xs font-bold text-slate-500 border border-slate-100 text-center">木</th>
+                            <th class="px-3 py-2 text-xs font-bold text-slate-500 border border-slate-100 text-center">金</th>
                         </tr>
                     </thead>
                     <tbody id="courseCodeTableBody"></tbody>
                 </table>
             </div>
             <div class="border-t border-slate-100 pt-4">
-                <p class="text-xs text-slate-400 mb-2">コード一覧</p>
-                <div class="flex gap-2 items-center">
-                    <code id="courseCodeText" class="flex-1 bg-slate-100 rounded px-3 py-2 text-sm font-mono text-slate-700 break-all"></code>
+                <p class="text-xs text-slate-400 mb-2">CSV形式（曜日,時限,授業コード,科目名）</p>
+                <div class="flex gap-2 items-start">
+                    <pre id="courseCodeText" class="flex-1 bg-slate-100 rounded px-3 py-2 text-xs font-mono text-slate-700 overflow-x-auto whitespace-pre"></pre>
                     <button id="copyCodesBtn" onclick="window.copyCourseCodeText()"
                         class="shrink-0 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-4 py-2 rounded-lg transition-colors">
-                        コードをコピー
+                        コピー
                     </button>
                 </div>
             </div>

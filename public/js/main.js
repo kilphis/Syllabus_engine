@@ -80,7 +80,7 @@ window.renameTab = function (currentName) {
     }
 };
 
-// Show course code list modal
+// Show course code list modal (timetable grid format)
 window.showCourseCodeList = function () {
     const currentSelectedIds = timetableData.plans[timetableData.currentPlan];
     const selected = allLectures.filter(l => currentSelectedIds.includes(`${l.dept}_${l.id}`));
@@ -90,22 +90,64 @@ window.showCourseCodeList = function () {
         return;
     }
 
-    const dayNames = ['', '月', '火', '水', '木', '金', '土'];
-    const rows = selected.map(l => {
-        const period = l.periods.map(p => `${dayNames[p.day]}${p.time}限`).join(', ');
-        return `<tr class="border-b border-slate-100 hover:bg-slate-50">
-            <td class="px-3 py-2 font-mono text-sm text-slate-600">${l.id}</td>
-            <td class="px-3 py-2 text-sm font-bold">${l.title}</td>
-            <td class="px-3 py-2 text-sm text-slate-500">${l.teacher ? l.teacher.split(',')[0].trim() : '-'}</td>
-            <td class="px-3 py-2 text-sm text-slate-500">${period}</td>
-        </tr>`;
+    const dayNames = ['月', '火', '水', '木', '金'];
+
+    // 曜日×時限グリッドを構築
+    const grid = {};
+    for (let t = 1; t <= 5; t++) {
+        grid[t] = {};
+        for (let d = 1; d <= 5; d++) grid[t][d] = [];
+    }
+    const noPeriod = []; // 集中など曜日時限なし
+
+    selected.forEach(l => {
+        if (!l.periods || l.periods.length === 0) {
+            noPeriod.push(l);
+            return;
+        }
+        l.periods.forEach(p => {
+            if (grid[p.time] && grid[p.time][p.day] !== undefined) {
+                grid[p.time][p.day].push(l);
+            }
+        });
+    });
+
+    // グリッド行を生成
+    const rows = [1, 2, 3, 4, 5].map(period => {
+        const cells = [1, 2, 3, 4, 5].map(day => {
+            const lectures = grid[period][day];
+            if (lectures.length === 0) return `<td class="px-2 py-3 text-center text-slate-200 border border-slate-100 text-xs">-</td>`;
+            const content = lectures.map(l =>
+                `<div class="font-mono font-bold text-blue-700">${l.id}</div><div class="text-[10px] text-slate-500 truncate max-w-[80px]">${l.title}</div>`
+            ).join('');
+            return `<td class="px-2 py-2 text-center border border-slate-100">${content}</td>`;
+        }).join('');
+        return `<tr><td class="px-3 py-3 text-center text-sm font-bold text-slate-500 bg-slate-50 border border-slate-100 whitespace-nowrap">${period}限</td>${cells}</tr>`;
     }).join('');
 
-    const codes = selected.map(l => l.id).join(', ');
+    // 集中講義
+    const noPeriodRows = noPeriod.map(l =>
+        `<tr class="border-b border-slate-100"><td colspan="6" class="px-3 py-2 text-sm">
+            <span class="font-mono font-bold text-blue-700 mr-2">${l.id}</span>${l.title}
+            <span class="ml-2 text-xs bg-slate-100 px-1 rounded">集中</span>
+        </td></tr>`
+    ).join('');
+
+    // CSV テキスト生成（曜日,時限,コード,科目名）
+    const csvLines = ['曜日,時限,授業コード,科目名'];
+    selected.forEach(l => {
+        if (!l.periods || l.periods.length === 0) {
+            csvLines.push(`集中,-,${l.id},${l.title}`);
+        } else {
+            l.periods.forEach(p => {
+                if (p.day >= 1 && p.day <= 5) csvLines.push(`${dayNames[p.day - 1]},${p.time},${l.id},${l.title}`);
+            });
+        }
+    });
 
     document.getElementById('courseCodeModal').classList.remove('hidden');
-    document.getElementById('courseCodeTableBody').innerHTML = rows;
-    document.getElementById('courseCodeText').textContent = codes;
+    document.getElementById('courseCodeTableBody').innerHTML = rows + (noPeriodRows ? `<tr><td colspan="6" class="px-3 pt-3 pb-1 text-xs font-bold text-slate-400">集中講義・曜日なし</td></tr>${noPeriodRows}` : '');
+    document.getElementById('courseCodeText').textContent = csvLines.join('\n');
 };
 
 window.copyCourseCodeText = function () {

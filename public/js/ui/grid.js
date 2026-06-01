@@ -35,6 +35,7 @@ export function renderGrid(allLectures) {
                 div.className = `text-[8px] sm:text-[10px] leading-tight p-1.5 rounded shadow-sm cursor-pointer flex-shrink-0 ${matches.length > 1 ? 'conflict' : 'cell-active'}`;
                 div.innerHTML = `
                     <div class="font-bold truncate">${m.title}</div>
+                    <div class="font-mono text-[9px] font-bold text-blue-600">${m.id}</div>
                     <div class="truncate text-slate-600 hidden sm:block">${m.teacher ? m.teacher.split(',')[0] : ''}</div>
                     <a href="${getSyllabusUrl(m)}" target="_blank" onclick="event.stopPropagation()" class="text-blue-700 hover:underline block mt-0.5 font-bold text-[9px] text-right hidden sm:block">シラバス ></a>
                 `;
