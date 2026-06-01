@@ -7,9 +7,10 @@ import { timetableData, activeTerms, isStrictMode, allLectures } from '../store.
 let displayLimit = 50;
 
 export function handleSearch() {
-    const { searchInput, deptFilter, gradeFilter, dayFilter, periodFilter, searchResults, resultsCount } = elements;
+    const { searchInput, teacherFilter, deptFilter, gradeFilter, dayFilter, periodFilter, searchResults, resultsCount } = elements;
 
     const query = searchInput.value.toLowerCase();
+    const teacherQuery = teacherFilter ? teacherFilter.value.toLowerCase() : '';
     const deptVal = deptFilter.value;
     const gradeVal = gradeFilter.value;
     const dayVal = dayFilter.value;
@@ -31,16 +32,21 @@ export function handleSearch() {
 
     // Filter Logic
     const filtered = allLectures.filter(l => {
-        // 1. Period Check
-        if (activeTerms.length === 0) return false;
-        if (!isTermMatch(l.tags, activeTerms, isStrictMode)) return false;
+        // 1. Teacher filter (works independently of term selection)
+        const matchesTeacher = teacherQuery === '' ||
+            (l.teacher && l.teacher.toLowerCase().includes(teacherQuery));
+        if (!matchesTeacher) return false;
 
-        // 2. Text Search
-        const matchesQuery = query === '' ||
-            l.title.toLowerCase().includes(query) ||
-            (l.teacher && l.teacher.toLowerCase().includes(query));
+        // 2. Term filter (skipped when teacher filter is active and no term selected)
+        if (teacherQuery === '') {
+            if (activeTerms.length === 0) return false;
+        }
+        if (activeTerms.length > 0 && !isTermMatch(l.tags, activeTerms, isStrictMode)) return false;
 
-        // 3. Attribute Filters
+        // 3. Text Search (科目名のみ)
+        const matchesQuery = query === '' || l.title.toLowerCase().includes(query);
+
+        // 4. Attribute Filters
         const matchesDept = deptVal === '' || l.dept === deptVal;
         const matchesGrade = gradeVal === '' || l.grade == gradeVal;
 

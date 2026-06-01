@@ -2,7 +2,7 @@ import { elements } from './elements.js';
 import { resetPagination } from './search.js';
 
 export function initFilters(allLectures) {
-    const { deptFilter, gradeFilter, dayFilter, periodFilter, searchInput, strictModeToggle } = elements;
+    const { deptFilter, gradeFilter, dayFilter, periodFilter, searchInput, teacherFilter, strictModeToggle } = elements;
 
     // Populate Dept Filter
     const depts = new Set();
@@ -23,6 +23,10 @@ export function initFilters(allLectures) {
 
     if (searchInput) {
         searchInput.addEventListener('input', resetPagination);
+    }
+
+    if (teacherFilter) {
+        teacherFilter.addEventListener('input', resetPagination);
     }
 
     // Strict Mode Listener (also handled by onclick in HTML, but change event is safer)

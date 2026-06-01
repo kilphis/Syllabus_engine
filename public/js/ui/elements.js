@@ -2,6 +2,7 @@ export const elements = {
     timetableGrid: document.getElementById('timetableGrid'),
     searchResults: document.getElementById('searchResults'),
     searchInput: document.getElementById('searchInput'),
+    teacherFilter: document.getElementById('teacherFilter'),
     deptFilter: document.getElementById('deptFilter'),
     gradeFilter: document.getElementById('gradeFilter'),
     dayFilter: document.getElementById('dayFilter'),

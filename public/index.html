@@ -47,6 +47,8 @@
                             class="term-btn px-3 py-1 rounded-full text-sm font-medium transition-colors border">T3</button>
                         <button onclick="if(window.toggleTerm) window.toggleTerm('T4')" data-term="T4"
                             class="term-btn px-3 py-1 rounded-full text-sm font-medium transition-colors border">T4</button>
+                        <button onclick="if(window.toggleTerm) window.toggleTerm('集中')" data-term="集中"
+                            class="term-btn px-3 py-1 rounded-full text-sm font-medium transition-colors border">集中</button>
                     </div>
 
                     <div class="flex justify-between items-center mb-2">
@@ -56,7 +58,9 @@
                             リセット
                         </button>
                     </div>
-                    <input type="text" id="searchInput" placeholder="科目名、教員名で検索..."
+                    <input type="text" id="searchInput" placeholder="科目名で検索..."
+                        class="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none mb-2">
+                    <input type="text" id="teacherFilter" placeholder="教員名で絞り込む（期間未選択でも検索可）"
                         class="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none mb-4">
 
                     <!-- Advanced Filters -->
@@ -205,7 +209,7 @@
     <footer class="mt-12 py-10 border-t border-slate-200 bg-white/50 backdrop-blur-sm print:hidden">
         <div class="max-w-7xl mx-auto px-4 text-center">
             <div class="flex justify-center flex-wrap gap-8 mb-6">
-                <a href="https://github.com/kilphis/release_KMDI_timetable" target="_blank"
+                <a href="https://github.com/kilphis/Syllabus_engine" target="_blank"
                     class="flex items-center gap-2 text-slate-500 hover:text-blue-600 transition-colors font-medium">
                     <span class="text-lg">GitHub</span>
                 </a>
