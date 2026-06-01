@@ -1,6 +1,6 @@
 export async function fetchLectures() {
     try {
-        const res = await fetch('./data/cleaned_lectures.json');
+        const res = await fetch('./data/lectures.json');
         if (!res.ok) throw new Error('Network response was not ok');
         return await res.json();
     } catch (err) {
