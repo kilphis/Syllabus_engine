@@ -123,6 +123,11 @@
                             <span>️🍎</span> 印刷/PDF保存
                         </button>
                         <!--画像保存ボタンがあった場所-->
+                        <button onclick="if(window.showCourseCodeList) window.showCourseCodeList()"
+                            class="text-xs flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-1 rounded transition-colors"
+                            title="授業コード一覧を表示">
+                            <span>📋</span> 授業コード
+                        </button>
                         <button id="wallpaperBtn"
                             class="text-xs flex items-center gap-1 bg-blue-100 hover:bg-blue-200 text-blue-600 px-2 py-1 rounded transition-colors"
                             title="壁紙として保存">
@@ -151,6 +156,40 @@
                 </div>
                 <div class="mt-4 p-4 bg-blue-50 text-blue-800 rounded-xl text-sm italic">
                     ※ 選択した講義が重なっている場合は赤く表示されます。
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Course Code Modal -->
+    <div id="courseCodeModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-2xl max-w-2xl w-full max-h-[80vh] flex flex-col mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-slate-800">授業コード一覧</h2>
+                <button onclick="document.getElementById('courseCodeModal').classList.add('hidden')"
+                    class="text-slate-400 hover:text-slate-600 text-xl">✕</button>
+            </div>
+            <div class="overflow-y-auto flex-1 mb-4">
+                <table class="w-full text-left">
+                    <thead class="bg-slate-50 sticky top-0">
+                        <tr>
+                            <th class="px-3 py-2 text-xs font-bold text-slate-500">授業コード</th>
+                            <th class="px-3 py-2 text-xs font-bold text-slate-500">科目名</th>
+                            <th class="px-3 py-2 text-xs font-bold text-slate-500">教員名</th>
+                            <th class="px-3 py-2 text-xs font-bold text-slate-500">曜日・時限</th>
+                        </tr>
+                    </thead>
+                    <tbody id="courseCodeTableBody"></tbody>
+                </table>
+            </div>
+            <div class="border-t border-slate-100 pt-4">
+                <p class="text-xs text-slate-400 mb-2">コード一覧</p>
+                <div class="flex gap-2 items-center">
+                    <code id="courseCodeText" class="flex-1 bg-slate-100 rounded px-3 py-2 text-sm font-mono text-slate-700 break-all"></code>
+                    <button id="copyCodesBtn" onclick="window.copyCourseCodeText()"
+                        class="shrink-0 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-4 py-2 rounded-lg transition-colors">
+                        コードをコピー
+                    </button>
                 </div>
             </div>
         </div>
