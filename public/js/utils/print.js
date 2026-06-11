@@ -3,7 +3,7 @@ import { timetableData } from '../store.js';
 export function printTimetable() {
     const originalTitle = document.title;
     const currentPlan = timetableData.currentPlan;
-    document.title = `クマダイ時間割_${currentPlan}_2025`;
+    document.title = `クマダイ時間割_${currentPlan}_2026`;
 
     window.print();
 
