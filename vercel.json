@@ -1,3 +1,4 @@
 {
+    "buildCommand": "python3 scripts/generate_seo.py",
     "outputDirectory": "public"
 }

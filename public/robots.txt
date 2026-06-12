@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://syllabus-engine.vercel.app/sitemap.xml
