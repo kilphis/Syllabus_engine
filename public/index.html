@@ -147,6 +147,16 @@
                             title="壁紙として保存">
                             <span>📱</span> 壁紙保存
                         </button>
+                        <button onclick="if(window.exportToICal) window.exportToICal()"
+                            class="text-xs flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-1 rounded transition-colors"
+                            title="Googleカレンダー等に取り込めるファイルを保存">
+                            <span>📅</span> カレンダー(.ics)
+                        </button>
+                        <button onclick="if(window.exportToObsidian) window.exportToObsidian()"
+                            class="text-xs flex items-center gap-1 bg-purple-100 hover:bg-purple-200 text-purple-600 px-2 py-1 rounded transition-colors"
+                            title="Obsidian保管庫に置けるノートを保存">
+                            <span>🟣</span> Obsidian(.md)
+                        </button>
                     </div>
                 </div>
 

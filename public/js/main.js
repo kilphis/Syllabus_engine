@@ -8,6 +8,7 @@ import { generateShareUrl, checkForSharedPlan } from './utils/share.js';
 import { toggleTerm as utilsToggleTerm, toggleSemester as utilsToggleSemester, updateTermButtons } from './utils/filters.js';
 import { initFilters } from './ui/filters.js';
 import { exportToImage, generateWallpaper } from './utils/export.js';
+import { exportToICal, exportToObsidian } from './utils/calendar.js';
 
 // --- Global Orchestration ---
 
@@ -165,6 +166,8 @@ window.printTimetable = printTimetable;
 window.switchTab = switchTab; // Already exposed in grid.js but good to be explicit
 window.loadMore = loadMore;   // Already exposed in search.js
 window.exportToImage = exportToImage;
+window.exportToICal = () => exportToICal(allLectures, timetableData);
+window.exportToObsidian = () => exportToObsidian(allLectures, timetableData);
 
 // Event Listeners
 document.getElementById('wallpaperBtn')?.addEventListener('click', () => {
