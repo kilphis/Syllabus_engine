@@ -9,6 +9,7 @@ import { toggleTerm as utilsToggleTerm, toggleSemester as utilsToggleSemester, u
 import { initFilters } from './ui/filters.js';
 import { exportToImage, generateWallpaper } from './utils/export.js';
 import { exportToICal, exportToObsidian } from './utils/calendar.js';
+import { DEADLINE_RULES, getDeadlineRule, setDeadlineRule } from './utils/deadlines.js';
 
 // --- Global Orchestration ---
 
@@ -158,6 +159,53 @@ window.copyCourseCodeText = function () {
         btn.textContent = 'コピー済み！';
         setTimeout(() => btn.textContent = 'コードをコピー', 1500);
     });
+};
+
+// 課題の締切タイミング設定モーダル
+const DAY_NAMES_SHORT = ['月', '火', '水', '木', '金'];
+
+window.showDeadlineSettings = function () {
+    const currentSelectedIds = timetableData.plans[timetableData.currentPlan];
+    // 毎週タスクの対象＝月〜金の通常コマを持つ講義のみ
+    const selected = allLectures.filter(l =>
+        currentSelectedIds.includes(`${l.dept}_${l.id}`) &&
+        l.periods && l.periods.some(p => p.day >= 1 && p.day <= 5)
+    );
+
+    const listEl = document.getElementById('deadlineList');
+    if (selected.length === 0) {
+        listEl.innerHTML = `<p class="text-sm text-slate-400 py-6 text-center">対象の講義がありません。<br>（月〜金の通常コマを持つ講義を選択してください）</p>`;
+        document.getElementById('deadlineModal').classList.remove('hidden');
+        return;
+    }
+
+    const optionsFor = (current) => Object.entries(DEADLINE_RULES).map(([value, label]) =>
+        `<option value="${value}"${value === current ? ' selected' : ''}>${label}</option>`
+    ).join('');
+
+    listEl.innerHTML = selected.map(l => {
+        const key = `${l.dept}_${l.id}`;
+        const label = l.periods
+            .filter(p => p.day >= 1 && p.day <= 5)
+            .map(p => `${DAY_NAMES_SHORT[p.day - 1]}${p.time}`)
+            .join('・');
+        return `<div class="flex items-center justify-between gap-3 py-2 border-b border-slate-100">
+            <div class="min-w-0">
+                <div class="text-sm font-medium text-slate-700 truncate">${l.title.trim()}</div>
+                <div class="text-xs text-slate-400">${label}</div>
+            </div>
+            <select onchange="window.setDeadline('${key}', this.value)"
+                class="shrink-0 text-sm border border-slate-200 rounded px-2 py-1 bg-white text-slate-700">
+                ${optionsFor(getDeadlineRule(key))}
+            </select>
+        </div>`;
+    }).join('');
+
+    document.getElementById('deadlineModal').classList.remove('hidden');
+};
+
+window.setDeadline = function (compositeKey, rule) {
+    setDeadlineRule(compositeKey, rule);
 };
 
 // Expose other utils to window

@@ -1,5 +1,6 @@
 import { TERM_MAP, PERIOD_TIMES, QUARTER_DATES } from '../constants.js';
 import { getSyllabusUrl } from '../syllabus.js';
+import { getDeadlineRule } from './deadlines.js';
 
 const DAY_NAMES = ['月', '火', '水', '木', '金'];
 
@@ -57,6 +58,11 @@ function formatICalDate(year, month, day) {
     return `${year}${pad2(month)}${pad2(day)}`;
 }
 
+function todayStr() {
+    const d = new Date();
+    return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+}
+
 // dateStr(YYYY-MM-DD) 以降で、最初に指定曜日(1=月...5=金)になる日を返す
 function firstOccurrenceOnOrAfter(dateStr, targetDay) {
     const [y, m, d] = dateStr.split('-').map(Number);
@@ -105,7 +111,7 @@ export function exportToICal(allLectures, timetableData) {
                 lecture.teacher ? `担当: ${lecture.teacher}` : '',
                 lecture.dept ? `学部: ${lecture.dept}` : '',
                 `シラバス: ${syllabusUrl}`
-            ].filter(Boolean).join('\\n');
+            ].filter(Boolean).join('\n');
 
             events.push([
                 'BEGIN:VEVENT',
@@ -116,6 +122,7 @@ export function exportToICal(allLectures, timetableData) {
                 `SUMMARY:${escapeICalText(lecture.title)}`,
                 lecture.teacher ? `LOCATION:${escapeICalText(lecture.teacher)}` : '',
                 `DESCRIPTION:${escapeICalText(description)}`,
+                `URL:${syllabusUrl}`,
                 'END:VEVENT'
             ].filter(Boolean).join('\r\n'));
         });
@@ -148,6 +155,48 @@ export function exportToICal(allLectures, timetableData) {
 
 function quarterLabel(lecture) {
     return getLectureQuarters(lecture).sort().join('/');
+}
+
+// 月〜金の通常コマを持つか（day=9集中・day=6土曜・その他は除外）
+function hasWeekdayPeriod(lecture) {
+    return (lecture.periods || []).some(p => p.day >= 1 && p.day <= 5);
+}
+
+// 「火5・金5」のような曜日・時限ラベル
+function dayPeriodLabel(lecture) {
+    return lecture.periods
+        .filter(p => p.day >= 1 && p.day <= 5)
+        .map(p => `${DAY_NAMES[p.day - 1]}${p.time}`)
+        .join('・');
+}
+
+// タスクの起点日(YYYY-MM-DD)。「今週から」出したいので、学期中なら今日以降・学期前なら学期開始から数える。
+// 通常コマが無ければ null
+function earliestOccurrenceDate(lecture) {
+    const range = getLectureDateRange(lecture);
+    const today = todayStr();
+    const startFrom = today > range.start ? today : range.start;
+    const dates = lecture.periods
+        .filter(p => p.day >= 1 && p.day <= 5)
+        .map(p => {
+            const o = firstOccurrenceOnOrAfter(startFrom, p.day);
+            return `${o.year}-${pad2(o.month)}-${pad2(o.day)}`;
+        });
+    return dates.length ? dates.reduce((a, b) => (a < b ? a : b)) : null;
+}
+
+// YYYY-MM-DD に n 日足した文字列を返す
+function addDays(dateStr, n) {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const date = new Date(y, m - 1, d + n);
+    return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+}
+
+// 締切ルールから Tasks の 📅 due 日付を求める（scheduled = 授業日）
+function dueDateForRule(rule, scheduled) {
+    if (rule === 'midnight') return scheduled;          // その日のうちに
+    if (rule === 'nextclass') return addDays(scheduled, 6); // 翌週同コマの前日まで
+    return null;                                         // irregular / none: 締切なし
 }
 
 export function exportToObsidian(allLectures, timetableData) {
@@ -187,6 +236,21 @@ export function exportToObsidian(allLectures, timetableData) {
         return `- **${l.title.trim()}**${term}${teacher}　[シラバス](${url})`;
     }).join('\n');
 
+    // Obsidian Tasks 形式（毎週繰り返し）。チェックすると翌週分が自動生成される
+    // 月〜金の通常コマを持つ講義のみ（集中・土曜・その他は除外）。「課題がない」講義は出さない
+    const weeklyTasks = withPeriods.filter(hasWeekdayPeriod).map(l => {
+        const rule = getDeadlineRule(`${l.dept}_${l.id}`);
+        if (rule === 'none') return null; // 課題がない → タスクを生成しない
+        const label = dayPeriodLabel(l);
+        const scheduled = earliestOccurrenceDate(l);
+        const due = dueDateForRule(rule, scheduled);
+        const duePart = due ? ` 📅 ${due}` : '';
+        return `- [ ] ${label} ${l.title.trim()} 🔁 every week ⏳ ${scheduled}${duePart}`;
+    }).filter(Boolean).join('\n');
+
+    // Tasks プラグインのダッシュボード（未完了を締切順に一覧）。シングルクォートで ``` を素通し
+    const tasksQuery = '```tasks\nnot done\nsort by due\nshort mode\n```';
+
     const md = `---
 tags: [時間割]
 plan: ${planName}
@@ -203,6 +267,19 @@ ${tableRows}
 ## 講義一覧
 
 ${lectureList}
+
+## 今週のタスク
+
+> [!info] Tasks プラグイン用
+> 各講義に毎週の繰り返しタスクを用意しています。課題や復習を終えたらチェックを付けてください。翌週分のタスクが自動で生成されます（\`🔁 every week\`）。
+
+### やること一覧（締切順）
+
+${tasksQuery}
+
+### 講義ごとのタスク
+
+${weeklyTasks}
 
 ---
 ※ Full Calendar プラグインで週表示したい場合は、同時に書き出した .ics ファイルもこの保管庫に置いてください。

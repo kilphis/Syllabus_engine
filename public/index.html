@@ -152,6 +152,11 @@
                             title="Googleカレンダー等に取り込めるファイルを保存">
                             <span>📅</span> カレンダー(.ics)
                         </button>
+                        <button onclick="if(window.showDeadlineSettings) window.showDeadlineSettings()"
+                            class="text-xs flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-1 rounded transition-colors"
+                            title="Obsidianタスクの課題締切タイミングを講義ごとに設定">
+                            <span>🗓️</span> 課題の締切
+                        </button>
                         <button onclick="if(window.exportToObsidian) window.exportToObsidian()"
                             class="text-xs flex items-center gap-1 bg-purple-100 hover:bg-purple-200 text-purple-600 px-2 py-1 rounded transition-colors"
                             title="Obsidian保管庫に置けるノートを保存">
@@ -218,6 +223,19 @@
                     </button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Deadline Settings Modal -->
+    <div id="deadlineModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-2xl max-w-2xl w-full max-h-[80vh] flex flex-col mx-4">
+            <div class="flex justify-between items-center mb-1">
+                <h2 class="text-xl font-bold text-slate-800">課題の締切タイミング</h2>
+                <button onclick="document.getElementById('deadlineModal').classList.add('hidden')"
+                    class="text-slate-400 hover:text-slate-600 text-xl">✕</button>
+            </div>
+            <p class="text-xs text-slate-400 mb-4">講義ごとに選んでおくと、Obsidian(.md) の毎週タスクに締切（📅）が付きます。設定は自動保存されます。</p>
+            <div class="overflow-y-auto flex-1 mb-2" id="deadlineList"></div>
         </div>
     </div>
 
