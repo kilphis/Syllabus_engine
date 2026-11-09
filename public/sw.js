@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kumadai-v3';
+const CACHE_NAME = 'kumadai-v4';
 const STATIC_ASSETS = [
     '/',
     '/index.html',
@@ -14,6 +14,7 @@ const STATIC_ASSETS = [
     '/js/ui/filters.js',
     '/js/ui/search.js',
     '/js/ui/modals.js',
+    '/js/ui/toast.js',
     '/js/utils/html.js',
     '/js/utils/deadlines.js',
     '/js/utils/export.js',

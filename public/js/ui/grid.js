@@ -1,6 +1,6 @@
 import { elements } from './elements.js';
 import { getSyllabusUrl } from '../syllabus.js';
-import { allLectures, currentSelectedIds, lectureKey, planNames, isSharedPlan, timetableData, selectedLectures } from '../store.js';
+import { planNames, isSharedPlan, timetableData, selectedLectures, canDeletePlan, lectureKey } from '../store.js';
 import { esc } from '../utils/html.js';
 
 const DAYS = 5;  // 月〜金
@@ -37,15 +37,20 @@ export function renderGrid() {
 }
 
 export function renderTabs() {
+    const deletable = canDeletePlan();
     elements.tabContainer.innerHTML = planNames().map(plan => {
         const isActive = plan === timetableData.currentPlan;
         const count = (timetableData.plans[plan] ?? []).length;
         const renamable = !isSharedPlan(plan);
         return `
-            <button data-action="switch-plan" data-plan="${esc(plan)}" ${renamable ? 'data-renamable' : ''}
-                title="${renamable ? 'ダブルクリックで名前変更' : ''}"
-                class="px-4 py-2 text-sm font-bold transition-colors border-b-4 ${isActive ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'}">
-                ${esc(plan)} <span class="text-xs font-normal ml-1 text-slate-400">(${count})</span>
-            </button>`;
+            <div class="flex items-center border-b-4 transition-colors ${isActive ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'}">
+                <button data-action="switch-plan" data-plan="${esc(plan)}" ${renamable ? 'data-renamable' : ''}
+                    title="${renamable ? 'ダブルクリックで名前変更' : ''}"
+                    class="pl-4 ${deletable ? 'pr-1' : 'pr-4'} py-2 text-sm font-bold">
+                    ${esc(plan)} <span class="text-xs font-normal ml-1 text-slate-400">(${count})</span>
+                </button>
+                ${deletable ? `<button data-action="delete-plan" data-plan="${esc(plan)}" aria-label="タブ「${esc(plan)}」を削除" title="このタブを削除"
+                    class="pr-3 pl-1 py-2 text-xs text-slate-300 hover:text-red-500">✕</button>` : ''}
+            </div>`;
     }).join('');
 }

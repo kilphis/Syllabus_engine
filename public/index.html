@@ -122,10 +122,31 @@
             <div class="md:col-span-8 landscape:col-span-8">
                 <!-- Tab Navigation -->
                 <div class="flex justify-between items-end mb-0 border-b border-slate-200">
-                    <div id="tabContainer" class="flex gap-2">
-                        <!-- Tabs will be injected here -->
+                    <div class="flex flex-wrap items-end gap-2">
+                        <div id="tabContainer" class="flex flex-wrap gap-2">
+                            <!-- Tabs will be injected here -->
+                        </div>
+                        <div id="addMenuWrap" class="relative pb-1">
+                            <button data-action="toggle-add-menu" title="タブを追加" aria-haspopup="true"
+                                class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-lg font-bold transition-colors">＋</button>
+                            <div id="addMenu" role="menu"
+                                class="hidden absolute left-0 top-full mt-1 z-30 w-52 bg-white border border-slate-200 rounded-xl shadow-lg py-1 text-sm">
+                                <button role="menuitem" data-action="add-plan" class="w-full text-left px-4 py-2 hover:bg-slate-50">空のタブを追加</button>
+                                <div class="border-t border-slate-100 my-1"></div>
+                                <div class="px-4 pt-1 pb-0.5 text-[10px] text-slate-400">期間を選んで追加</div>
+                                <button role="menuitem" data-action="add-plan" data-term="T1" class="w-full text-left px-4 py-2 hover:bg-slate-50">T1 用のタブ</button>
+                                <button role="menuitem" data-action="add-plan" data-term="T2" class="w-full text-left px-4 py-2 hover:bg-slate-50">T2 用のタブ</button>
+                                <button role="menuitem" data-action="add-plan" data-term="T3" class="w-full text-left px-4 py-2 hover:bg-slate-50">T3 用のタブ</button>
+                                <button role="menuitem" data-action="add-plan" data-term="T4" class="w-full text-left px-4 py-2 hover:bg-slate-50">T4 用のタブ</button>
+                            </div>
+                        </div>
                     </div>
                     <div class="flex    flex-wrap justify-end gap-2 pb-1">
+                        <button id="undoBtn" data-action="undo" disabled
+                            class="text-xs flex items-center gap-1 bg-amber-100 hover:bg-amber-200 text-amber-700 px-2 py-1 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-amber-100"
+                            title="直前の変更を元に戻す (Ctrl/⌘+Z)">
+                            <span>↩</span> 元に戻す
+                        </button>
                         <button data-action="share-url"
                             class="text-xs flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-1 rounded transition-colors"
                             title="URLで共有">
@@ -188,6 +209,13 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- Undo Toast -->
+    <div id="toast" role="status" aria-live="polite"
+        class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 max-w-[90vw] items-center gap-3 bg-slate-800 text-white text-sm rounded-xl shadow-lg px-4 py-3 flex print:hidden">
+        <span id="toastMessage" class="truncate"></span>
+        <button id="toastUndo" data-action="undo" class="shrink-0 font-bold text-amber-300 hover:text-amber-200 underline">元に戻す</button>
     </div>
 
     <!-- Course Code Modal -->

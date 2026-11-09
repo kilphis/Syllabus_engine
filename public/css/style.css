@@ -35,6 +35,7 @@
     header,
     .md\:col-span-4,
     #tabContainer,
+    #addMenuWrap,
     .flex.gap-2.pb-1,
     .mt-4.p-4.bg-blue-50 {
         display: none !important;

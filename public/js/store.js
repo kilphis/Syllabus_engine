@@ -29,6 +29,20 @@ function notify() {
     listeners.forEach(fn => fn());
 }
 
+// --- Undo 履歴（セッション内のみ。講義の追加・削除、リセット、共有プランの上書きが対象） ---
+
+const HISTORY_LIMIT = 30;
+// 履歴の要素: { plan, ids }（中身の変更）／ { plan, ids, order, deleted: true }（タブごとの削除。order は planOrder 内の位置）
+const history = [];
+
+// 変更前のプラン内容を控える。必ず変更の直前に呼ぶ
+function record(plan) {
+    history.push({ plan, ids: [...(timetableData.plans[plan] ?? [])] });
+    if (history.length > HISTORY_LIMIT) history.shift();
+}
+
+export const canUndo = () => history.length > 0;
+
 // --- Selectors ---
 
 export const lectureKey = (lecture) => `${lecture.dept}_${lecture.id}`;
@@ -132,21 +146,106 @@ export function setLectures(lectures) {
     notify();
 }
 
+// 追加なら 'added'、削除なら 'removed' を返す
 export function toggleLecture(key) {
     const name = timetableData.currentPlan;
     const ids = currentSelectedIds();
-    timetableData.plans[name] = ids.includes(key) ? ids.filter(k => k !== key) : [...ids, key];
+    const wasSelected = ids.includes(key);
+    record(name);
+    timetableData.plans[name] = wasSelected ? ids.filter(k => k !== key) : [...ids, key];
     commit();
+    return wasSelected ? 'removed' : 'added';
 }
 
 export function resetCurrentPlan() {
+    record(timetableData.currentPlan);
     timetableData.plans[timetableData.currentPlan] = [];
     commit();
+}
+
+// 削除したタブを元の位置へ戻して開く（同名のタブが作られていたら別名にする）
+function restoreDeletedPlan(entry) {
+    const name = timetableData.plans[entry.plan] === undefined ? entry.plan : uniquePlanName(entry.plan);
+    timetableData.plans[name] = entry.ids;
+    if (entry.order > -1) {
+        timetableData.planOrder.splice(Math.min(entry.order, timetableData.planOrder.length), 0, name);
+    }
+    timetableData.currentPlan = name;
+    commit();
+}
+
+// 直前の変更を取り消し、そのプランのタブへ移動する。戻せるものがなければ null
+export function undo() {
+    while (history.length > 0) {
+        const entry = history.pop();
+        if (entry.deleted) {
+            restoreDeletedPlan(entry);
+            return entry;
+        }
+        if (timetableData.plans[entry.plan] === undefined) continue; // タブ名変更などで消えたプランは飛ばす
+        timetableData.plans[entry.plan] = entry.ids;
+        timetableData.currentPlan = entry.plan;
+        commit();
+        return entry;
+    }
+    notify();
+    return null;
 }
 
 export function switchPlan(name) {
     timetableData.currentPlan = name;
     commit();
+}
+
+// 重複しない名前にする（例: "T4" が使用済みなら "T4 (2)"）
+function uniquePlanName(base) {
+    if (timetableData.plans[base] === undefined) return base;
+    let n = 2;
+    while (timetableData.plans[`${base} (${n})`] !== undefined) n++;
+    return `${base} (${n})`;
+}
+
+// 使われていない最小の「案N」（案1〜3があれば案4）
+function nextNumberedPlanName() {
+    let n = 1;
+    while (timetableData.plans[`案${n}`] !== undefined) n++;
+    return `案${n}`;
+}
+
+// 新しいタブを末尾に追加して開く。term を渡すと名前をその期間にし、検索の期間もその期間だけに切り替える
+export function addPlan(term = null) {
+    const name = term
+        ? uniquePlanName(term)
+        : nextNumberedPlanName();
+    timetableData.plans[name] = [];
+    timetableData.planOrder.push(name);
+    timetableData.currentPlan = name;
+    if (term) {
+        activeTerms.splice(0, activeTerms.length, term);
+        persistFilters();
+    }
+    commit();
+    return name;
+}
+
+export const canDeletePlan = () => planNames().length > 1;
+
+// タブを削除する。最後の1枚は消せない。開いているタブを消したら隣のタブへ移る。消したタブの名前と講義数を返す
+export function deletePlan(name) {
+    const names = planNames();
+    const pos = names.indexOf(name);
+    if (pos === -1 || names.length <= 1) return null;
+
+    const ids = [...(timetableData.plans[name] ?? [])];
+    const order = timetableData.planOrder.indexOf(name);
+    history.push({ plan: name, ids, order, deleted: true });
+    if (history.length > HISTORY_LIMIT) history.shift();
+
+    if (timetableData.currentPlan === name) timetableData.currentPlan = names[pos - 1] ?? names[pos + 1];
+    delete timetableData.plans[name];
+    if (order > -1) timetableData.planOrder.splice(order, 1);
+    commit();
+    return { name, count: ids.length };
 }
 
 export function renamePlan(oldName, newName) {
@@ -157,11 +256,13 @@ export function renamePlan(oldName, newName) {
     const idx = timetableData.planOrder.indexOf(oldName);
     if (idx !== -1) timetableData.planOrder[idx] = newName;
     if (timetableData.currentPlan === oldName) timetableData.currentPlan = newName;
+    history.forEach(h => { if (h.plan === oldName && !h.deleted) h.plan = newName; });
     commit();
     return true;
 }
 
 export function importSharedPlan(ids) {
+    if (timetableData.plans[SHARED_PLAN]) record(SHARED_PLAN);
     timetableData.plans[SHARED_PLAN] = ids;
     timetableData.currentPlan = SHARED_PLAN;
     commit();
