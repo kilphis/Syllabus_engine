@@ -24,12 +24,24 @@ export function getDeadlineRule(compositeKey) {
     return deadlines[compositeKey] || DEFAULT_RULE;
 }
 
-export function setDeadlineRule(compositeKey, rule) {
-    if (!DEADLINE_RULES[rule]) return;
-    deadlines[compositeKey] = rule;
+function save() {
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(deadlines));
     } catch (e) {
         console.error('Failed to save deadline setting:', e);
     }
+}
+
+export function setDeadlineRule(compositeKey, rule) {
+    if (!DEADLINE_RULES[rule]) return;
+    deadlines[compositeKey] = rule;
+    save();
+}
+
+// バックアップ用: 全設定の取得と、検証済みデータでの置き換え
+export const getAllDeadlines = () => ({ ...deadlines });
+
+export function replaceDeadlines(data) {
+    deadlines = { ...data };
+    save();
 }

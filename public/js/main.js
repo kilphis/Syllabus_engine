@@ -1,14 +1,18 @@
 import {
     initStore, subscribe, setLectures, allLectures, timetableData,
     toggleLecture, resetCurrentPlan, switchPlan, renamePlan, toggleTerm, setStrictMode,
-    undo, canUndo, lectureKey, addPlan, deletePlan
+    undo, canUndo, lectureKey, addPlan, deletePlan, setView, toggleSyllabusLinks, showSyllabusLinks
 } from './store.js';
 import { fetchLectures } from './api.js';
 import { elements } from './ui/elements.js';
-import { renderGrid, renderTabs } from './ui/grid.js';
+import { renderGrid, renderTabs, isTabDeleteMode, setTabDeleteMode } from './ui/grid.js';
 import { renderSearch, loadMore } from './ui/search.js';
 import { initFilters } from './ui/filters.js';
 import { showToast, hideToast } from './ui/toast.js';
+import { renderRecords, toggleMemoPreview, applyView } from './ui/records.js';
+import { initSurvey, openSurvey, answeredSurvey, closeSurvey, isSurveyOpen } from './ui/survey.js';
+import { showBackupModal, exportBackup, importBackup } from './ui/backup.js';
+import { markToday, cycleAttendance, removeAttendance, setMemo } from './records.js';
 import { openModal, closeModal, showCourseCodeList, copyCourseCodeText, showDeadlineSettings } from './ui/modals.js';
 import { updateTermButtons } from './utils/filters.js';
 import { printTimetable } from './utils/print.js';
@@ -24,10 +28,21 @@ function render() {
     renderGrid();
     renderSearch();
     updateTermButtons();
+    renderRecords();
     elements.undoBtn.disabled = !canUndo();
 }
 
 const closeAddMenu = () => elements.addMenu.classList.add('hidden');
+
+function closeMoreMenu() {
+    elements.moreMenu.classList.add('hidden');
+    elements.moreMenuWrap.querySelector('[aria-haspopup]').setAttribute('aria-expanded', 'false');
+}
+
+function toggleMoreMenu() {
+    const open = elements.moreMenu.classList.toggle('hidden') === false;
+    elements.moreMenuWrap.querySelector('[aria-haspopup]').setAttribute('aria-expanded', open);
+}
 
 function undoLast() {
     if (undo()) showToast('元に戻しました');
@@ -37,8 +52,18 @@ function undoLast() {
 // --- Actions: HTML の data-action / data-change-action と対応する処理 ---
 // 引数は押された要素（dataset から値を取る）
 
+// Tailwind の sm（640px）未満。シラバスリンクのボタンが表示される幅と同じ
+const isSmallScreen = () => window.matchMedia?.('(max-width: 639px)').matches ?? false;
+
+// スマホでシラバスリンクを表示している間は、時間割のカードを押しても外れない（リンクを押し損ねて消すのを防ぐ）
+const isCardLocked = (el) => showSyllabusLinks && isSmallScreen() && el.closest('#timetableGrid') !== null;
+
 const clickActions = {
     'toggle-lecture': (el) => {
+        if (isCardLocked(el)) {
+            showToast('シラバスリンクを表示している間は、カードを外せません');
+            return;
+        }
         const key = el.dataset.key;
         if (toggleLecture(key) === 'removed') {
             const title = allLectures.find(l => lectureKey(l) === key)?.title.trim() ?? key;
@@ -46,10 +71,27 @@ const clickActions = {
         }
     },
     'undo': () => undoLast(),
+    'survey-open': () => openSurvey(),
+    'survey-answered': () => answeredSurvey(),
+    'survey-close': () => closeSurvey(),
+    'show-backup': () => showBackupModal(),
+    'export-backup': () => exportBackup(),
+    'toggle-tab-delete': () => setTabDeleteMode(!isTabDeleteMode()),
+    'toggle-syllabus-links': () => toggleSyllabusLinks(),
     'delete-plan': (el) => {
+        setTabDeleteMode(false); // 1枚消したら削除モードを抜ける
         const deleted = deletePlan(el.dataset.plan);
         if (deleted) showToast(`タブ「${deleted.name}」を削除しました`, { withUndo: true });
     },
+    'set-view': (el) => setView(el.dataset.view),
+    'mark-today': (el) => markToday(el.dataset.key),
+    'cycle-attendance': (el) => cycleAttendance(el.dataset.key, el.dataset.date),
+    'delete-attendance': (el) => {
+        removeAttendance(el.dataset.key, el.dataset.date);
+        showToast('出席の記録を削除しました', { withUndo: true });
+    },
+    'toggle-memo-preview': (el) => toggleMemoPreview(el.dataset.key),
+    'toggle-more-menu': () => toggleMoreMenu(),
     'toggle-add-menu': () => elements.addMenu.classList.toggle('hidden'),
     'add-plan': (el) => {
         closeAddMenu();
@@ -77,6 +119,7 @@ const clickActions = {
 };
 
 const changeActions = {
+    'import-backup': (el) => importBackup(el),
     'toggle-strict': (el) => setStrictMode(el.checked),
     'set-deadline': (el) => setDeadlineRule(el.dataset.key, el.value),
 };
@@ -95,10 +138,19 @@ function promptRename(currentName) {
 document.addEventListener('click', (e) => {
     // タブ追加メニューの外を押したら閉じる
     if (!e.target.closest('#addMenuWrap')) closeAddMenu();
+    if (!e.target.closest('#moreMenuWrap')) closeMoreMenu();
     // 要素内のシラバスリンクは遷移だけさせ、カード全体の操作は発火させない
     if (e.target.closest('a[href]')) return;
     const el = e.target.closest('[data-action]');
     clickActions[el?.dataset.action]?.(el);
+    // 「その他」メニューの項目を押したら、メニューを閉じる
+    if (el?.closest('#moreMenu')) closeMoreMenu();
+});
+
+// メモは入力のたびに保存する（再描画するとカーソルが飛ぶので、画面は更新しない）
+document.addEventListener('input', (e) => {
+    const memo = e.target.closest?.('[data-memo-key]');
+    if (memo) setMemo(memo.dataset.memoKey, memo.value);
 });
 
 document.addEventListener('change', (e) => {
@@ -108,7 +160,12 @@ document.addEventListener('change', (e) => {
 
 // Ctrl/⌘+Z で元に戻す（入力欄の文字の取り消しは邪魔しない）
 document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeAddMenu();
+    if (e.key === 'Escape') {
+        closeAddMenu();
+        closeMoreMenu();
+        if (isTabDeleteMode()) setTabDeleteMode(false);
+        if (isSurveyOpen()) closeSurvey();
+    }
     if (!(e.ctrlKey || e.metaKey) || e.shiftKey || e.key.toLowerCase() !== 'z') return;
     if (e.target.closest?.('input, textarea, select')) return;
     e.preventDefault();
@@ -123,19 +180,30 @@ elements.tabContainer.addEventListener('dblclick', (e) => {
 // --- Initialization ---
 
 async function initApp() {
-    initStore();
-    subscribe(render);
-
     try {
+        initStore();
+        applyView();
+        subscribe(render);
         setLectures(await fetchLectures());
         initFilters(allLectures);
         checkForSharedPlan();
         render();
+        initSurvey();
+        document.documentElement.dataset.app = 'ready'; // index.html の見張りスクリプトが見る起動完了の目印
         console.log("App initialized with", allLectures.length, "lectures");
     } catch (err) {
         console.error("Initialization failed:", err);
-        elements.timetableGrid.innerHTML = `<tr><td colspan="6" class="text-center text-red-500 py-8">データの読み込みに失敗しました。</td></tr>`;
+        showStartupError();
     }
+}
+
+// 起動に失敗したとき、何が起きたか分からない白い画面にしない
+function showStartupError() {
+    const grid = elements.timetableGrid;
+    if (!grid) return;
+    grid.innerHTML = `<tr><td colspan="6" class="text-center text-red-500 py-8">
+        読み込みに失敗しました。ページを強制再読み込み（Mac: ⌘+Shift+R ／ Windows: Ctrl+Shift+R）してください。<br>
+        それでも直らないときは、ブラウザのコンソールに出ているエラーを教えてください。</td></tr>`;
 }
 
 initApp();

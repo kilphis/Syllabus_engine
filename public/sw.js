@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kumadai-v4';
+const CACHE_NAME = 'kumadai-v8';
 const STATIC_ASSETS = [
     '/',
     '/index.html',
@@ -15,6 +15,14 @@ const STATIC_ASSETS = [
     '/js/ui/search.js',
     '/js/ui/modals.js',
     '/js/ui/toast.js',
+    '/js/ui/records.js',
+    '/js/records.js',
+    '/js/utils/markdown.js',
+    '/js/utils/backup.js',
+    '/js/utils/storage.js',
+    '/js/ui/backup.js',
+    '/js/survey.js',
+    '/js/ui/survey.js',
     '/js/utils/html.js',
     '/js/utils/deadlines.js',
     '/js/utils/export.js',
@@ -61,7 +69,8 @@ self.addEventListener('fetch', event => {
 
     if (isFreshFirst(request, url)) {
         event.respondWith(
-            fetch(request)
+            // no-cache: ブラウザの推測キャッシュを使わず、毎回サーバーへ更新確認する（古いJSが混ざるのを防ぐ）
+            fetch(request, { cache: 'no-cache' })
                 .then(resp => {
                     const copy = resp.clone();
                     caches.open(CACHE_NAME).then(cache => cache.put(request, copy));

@@ -4,6 +4,8 @@
 const STORAGE_KEY = 'myTimetableData';
 const LEGACY_KEY = 'myTimetable';
 const FILTERS_KEY = 'searchFilters';
+const VIEW_KEY = 'activeView';
+const SYLLABUS_LINKS_KEY = 'showSyllabusLinks';
 const SHARED_PLAN = '共有';
 
 export let timetableData = {
@@ -15,6 +17,8 @@ export let timetableData = {
 export let allLectures = [];
 export const activeTerms = ['T1']; // Default: T1 selected
 export let isStrictMode = false;
+export let activeView = 'timetable'; // 'timetable' | 'records'
+export let showSyllabusLinks = false; // スマホの時間割カードにシラバスリンクを出すか
 
 // --- Observer ---
 
@@ -29,6 +33,11 @@ function notify() {
     listeners.forEach(fn => fn());
 }
 
+// 別モジュールが持つ保存データ（出席・メモなど）の変更を、購読者へ知らせる
+export function notifyChange() {
+    notify();
+}
+
 // --- Undo 履歴（セッション内のみ。講義の追加・削除、リセット、共有プランの上書きが対象） ---
 
 const HISTORY_LIMIT = 30;
@@ -38,6 +47,12 @@ const history = [];
 // 変更前のプラン内容を控える。必ず変更の直前に呼ぶ
 function record(plan) {
     history.push({ plan, ids: [...(timetableData.plans[plan] ?? [])] });
+    if (history.length > HISTORY_LIMIT) history.shift();
+}
+
+// store 外のデータ（出席記録など）の変更を取り消せるよう、復元用の関数を履歴に積む
+export function pushUndo(restore) {
+    history.push({ restore });
     if (history.length > HISTORY_LIMIT) history.shift();
 }
 
@@ -67,6 +82,15 @@ export function planNames() {
 export const isSharedPlan = (name) => name === SHARED_PLAN;
 
 // --- Persistence ---
+
+function restoreView() {
+    try {
+        if (localStorage.getItem(VIEW_KEY) === 'records') activeView = 'records';
+        showSyllabusLinks = localStorage.getItem(SYLLABUS_LINKS_KEY) === '1';
+    } catch (e) {
+        console.error("Failed to restore view:", e);
+    }
+}
 
 // 検索条件（期間・厳密モード・フォーム値）の保存と復元
 let savedForm = {};
@@ -102,6 +126,7 @@ export function saveForm(form) {
 
 export function initStore() {
     restoreFilters();
+    restoreView();
     try {
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) {
@@ -178,6 +203,11 @@ function restoreDeletedPlan(entry) {
 export function undo() {
     while (history.length > 0) {
         const entry = history.pop();
+        if (entry.restore) {
+            entry.restore();
+            notify();
+            return entry;
+        }
         if (entry.deleted) {
             restoreDeletedPlan(entry);
             return entry;
@@ -281,4 +311,30 @@ export function setStrictMode(value) {
     isStrictMode = value;
     persistFilters();
     notify();
+}
+
+export function setView(view) {
+    activeView = view === 'records' ? 'records' : 'timetable';
+    try {
+        localStorage.setItem(VIEW_KEY, activeView);
+    } catch (e) {
+        console.error("Failed to save view:", e);
+    }
+    notify();
+}
+
+export function toggleSyllabusLinks() {
+    showSyllabusLinks = !showSyllabusLinks;
+    try {
+        localStorage.setItem(SYLLABUS_LINKS_KEY, showSyllabusLinks ? '1' : '0');
+    } catch (e) {
+        console.error("Failed to save syllabus link setting:", e);
+    }
+    notify();
+}
+
+// バックアップの復元用。検証済みの時間割データで丸ごと置き換える
+export function replaceTimetable(data) {
+    timetableData = data;
+    commit();
 }

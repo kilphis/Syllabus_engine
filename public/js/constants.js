@@ -43,3 +43,6 @@ export const QUARTER_DATES = {
     T3: { start: '2026-09-28', end: '2026-11-26' },
     T4: { start: '2026-11-27', end: '2027-02-09' }
 };
+
+// アンケートの回答用URL（Google フォーム）。ポップアップの「アンケートに答える」の移動先
+export const SURVEY_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSdLjmtAK-Q4kixObc1EhPA8uR0J0QWXgsaeWa5arLFtQO2U1g/viewform';

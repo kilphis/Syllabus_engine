@@ -120,8 +120,14 @@
 
             <!-- Main Content (Bottom on mobile portrait, Right on PC/Landscape) -->
             <div class="md:col-span-8 landscape:col-span-8">
+                <!-- View Switch -->
+                <div id="viewSwitch" class="flex gap-2 mb-3 print:hidden">
+                    <button data-action="set-view" data-view="timetable">時間割</button>
+                    <button data-action="set-view" data-view="records">記録</button>
+                </div>
+
                 <!-- Tab Navigation -->
-                <div class="flex justify-between items-end mb-0 border-b border-slate-200">
+                <div class="flex flex-wrap justify-between items-end gap-y-1 mb-0 border-b border-slate-200">
                     <div class="flex flex-wrap items-end gap-2">
                         <div id="tabContainer" class="flex flex-wrap gap-2">
                             <!-- Tabs will be injected here -->
@@ -140,52 +146,62 @@
                                 <button role="menuitem" data-action="add-plan" data-term="T4" class="w-full text-left px-4 py-2 hover:bg-slate-50">T4 用のタブ</button>
                             </div>
                         </div>
+                        <div class="pb-1"><button id="tabDeleteBtn" data-action="toggle-tab-delete" class="hidden">完了</button></div>
                     </div>
-                    <div class="flex    flex-wrap justify-end gap-2 pb-1">
+                    <div id="toolbar" class="flex flex-wrap justify-end gap-2 pb-1 ml-auto">
                         <button id="undoBtn" data-action="undo" disabled
                             class="text-xs flex items-center gap-1 bg-amber-100 hover:bg-amber-200 text-amber-700 px-2 py-1 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-amber-100"
                             title="直前の変更を元に戻す (Ctrl/⌘+Z)">
                             <span>↩</span> 元に戻す
                         </button>
-                        <button data-action="share-url"
-                            class="text-xs flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-1 rounded transition-colors"
-                            title="URLで共有">
+                        <button data-action="share-url" class="timetable-only text-xs flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-1 rounded transition-colors" title="URLで共有">
                             <span>🔗</span> 共有
                         </button>
-                        <button data-action="print"
-                            class="text-xs flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-1 rounded transition-colors"
-                            title="印刷 / PDF保存">
-                            <span>🖨️</span> 印刷/PDF保存
-                        </button>
-                        <!--画像保存ボタンがあった場所-->
-                        <button data-action="show-course-codes"
-                            class="text-xs flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-1 rounded transition-colors"
-                            title="授業コード一覧を表示">
+                        <button data-action="show-course-codes" class="timetable-only text-xs flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-1 rounded transition-colors" title="授業コード一覧を表示">
                             <span>📋</span> 授業コード
                         </button>
                         <button id="wallpaperBtn" data-action="wallpaper"
-                            class="text-xs flex items-center gap-1 bg-blue-100 hover:bg-blue-200 text-blue-600 px-2 py-1 rounded transition-colors"
+                            class="timetable-only text-xs flex items-center gap-1 bg-blue-100 hover:bg-blue-200 text-blue-600 px-2 py-1 rounded transition-colors"
                             title="壁紙として保存">
                             <span>📱</span> 壁紙保存
                         </button>
-                        <button data-action="export-ical"
-                            class="text-xs flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-1 rounded transition-colors"
-                            title="Googleカレンダー等に取り込めるファイルを保存">
-                            <span>📅</span> カレンダー(.ics)
+                        <button id="syllabusLinksBtn" data-action="toggle-syllabus-links"
+                            class="timetable-only sm:hidden text-xs flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-1 rounded transition-colors"
+                            title="時間割のカードにシラバスへのリンクを表示">
+                            <span>🔗</span> シラバスリンク
                         </button>
-                        <button data-action="show-deadlines"
-                            class="text-xs flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-1 rounded transition-colors"
-                            title="Obsidianタスクの課題締切タイミングを講義ごとに設定">
-                            <span>🗓️</span> 課題の締切
-                        </button>
-                        <button data-action="export-obsidian"
-                            class="text-xs flex items-center gap-1 bg-purple-100 hover:bg-purple-200 text-purple-600 px-2 py-1 rounded transition-colors"
-                            title="Obsidian保管庫に置けるノートを保存">
-                            <span>🟣</span> Obsidian(.md)
-                        </button>
+                        <div id="moreMenuWrap" class="relative">
+                            <button data-action="toggle-more-menu" aria-haspopup="true" aria-expanded="false" title="その他の操作"
+                                class="text-xs flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-1 rounded transition-colors">
+                                <span>⋯</span> その他
+                            </button>
+                            <div id="moreMenu" role="menu"
+                                class="hidden absolute right-0 top-full mt-1 z-30 w-56 bg-white border border-slate-200 rounded-xl shadow-lg py-1 text-sm">
+                                <button role="menuitem" data-action="print" class="timetable-only w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center gap-2 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent" title="印刷 / PDF保存">
+                                    <span>🖨️</span> 印刷 / PDF保存
+                                </button>
+                                <button role="menuitem" data-action="export-ical" class="timetable-only w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center gap-2 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent" title="Googleカレンダー等に取り込めるファイルを保存">
+                                    <span>📅</span> カレンダー(.ics)
+                                </button>
+                                <button role="menuitem" data-action="show-deadlines" class="timetable-only w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center gap-2 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent" title="Obsidianタスクの課題締切タイミングを講義ごとに設定">
+                                    <span>🗓️</span> 課題の締切
+                                </button>
+                                <button role="menuitem" data-action="export-obsidian" class="timetable-only w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center gap-2 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent" title="Obsidian保管庫に置けるノートを保存">
+                                    <span>🟣</span> Obsidian(.md)
+                                </button>
+                                <div class="timetable-only border-t border-slate-100 my-1"></div>
+                                <button role="menuitem" data-action="show-backup" class="w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center gap-2 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent" title="時間割・出席・メモをファイルに保存／ファイルから復元">
+                                    <span>💾</span> バックアップ
+                                </button>
+                                <button id="tabDeleteMenuItem" role="menuitem" data-action="toggle-tab-delete" class="w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center gap-2 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent" title="タブごと削除する（各タブに✕が出ます）">
+                                    <span>🗑️</span> タブを削除
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
+                <div id="timetablePanel">
                 <!-- Added overflow-x-auto for horizontal scrolling on small screens -->
                 <div
                     class="bg-white rounded-b-2xl rounded-tr-2xl shadow-sm border border-slate-200 overflow-x-auto border-t-0">
@@ -207,6 +223,10 @@
                 <div class="mt-4 p-4 bg-blue-50 text-blue-800 rounded-xl text-sm italic">
                     ※ 選択した講義が重なっている場合は赤く表示されます。
                 </div>
+                </div>
+
+                <!-- 記録（出席・メモ） -->
+                <div id="recordsPanel" class="hidden mt-4"></div>
             </div>
         </div>
     </div>
@@ -216,6 +236,45 @@
         class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 max-w-[90vw] items-center gap-3 bg-slate-800 text-white text-sm rounded-xl shadow-lg px-4 py-3 flex print:hidden">
         <span id="toastMessage" class="truncate"></span>
         <button id="toastUndo" data-action="undo" class="shrink-0 font-bold text-amber-300 hover:text-amber-200 underline">元に戻す</button>
+    </div>
+
+    <!-- Survey Modal -->
+    <div id="surveyModal" role="dialog" aria-modal="true" aria-labelledby="surveyTitle"
+        class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 print:hidden">
+        <div class="bg-white p-6 rounded-2xl max-w-md w-full mx-4">
+            <h2 id="surveyTitle" class="text-xl font-bold text-slate-800 mb-2">アンケートにご協力ください</h2>
+            <p class="text-sm text-slate-600 mb-5">このアプリを使ってくれてありがとうございます。今後の改善のため、使ってみた感想や要望を聞かせてください。</p>
+            <div class="grid gap-2">
+                <button data-action="survey-open"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2.5 rounded-lg transition-colors">アンケートに答える</button>
+                <button data-action="survey-answered"
+                    class="w-full border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold px-4 py-2.5 rounded-lg transition-colors">すでに回答した</button>
+                <button data-action="survey-close"
+                    class="w-full text-slate-500 hover:text-slate-700 text-sm px-4 py-2 transition-colors">今回は閉じる</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Backup Modal -->
+    <div id="backupModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-2xl max-w-lg w-full max-h-[85vh] overflow-y-auto mx-4">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-xl font-bold text-slate-800">バックアップ</h2>
+                <button data-action="close-modal" data-modal="backupModal" aria-label="閉じる"
+                    class="text-slate-400 hover:text-slate-600 text-xl">✕</button>
+            </div>
+            <p class="text-sm text-slate-600 mb-4">時間割（すべてのタブ）・出席記録・メモ・課題締切の設定を、1つのファイルに保存できます。ブラウザのデータを消したときや、端末を変えるときに、このファイルから戻せます。</p>
+            <div id="backupSummary" class="text-sm bg-slate-50 rounded-xl p-3 mb-4 space-y-1"></div>
+            <div class="grid gap-3">
+                <button data-action="export-backup"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2.5 rounded-lg transition-colors">バックアップを保存</button>
+                <label class="w-full text-center cursor-pointer border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold px-4 py-2.5 rounded-lg transition-colors focus-within:ring-2 focus-within:ring-blue-500">
+                    ファイルから復元
+                    <input id="backupFile" type="file" accept=".json,application/json" data-change-action="import-backup" class="sr-only">
+                </label>
+            </div>
+            <p id="backupMessage" role="status" class="mt-4 text-sm text-slate-500"></p>
+        </div>
     </div>
 
     <!-- Course Code Modal -->
@@ -350,6 +409,16 @@
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js');
         }
+
+        // main.js の読み込み自体が失敗した（古いファイルが混ざった等）とき、白い画面のままにしないための見張り
+        setTimeout(function () {
+            if (document.documentElement.dataset.app === 'ready') return;
+            var banner = document.createElement('div');
+            banner.setAttribute('role', 'alert');
+            banner.className = 'fixed bottom-4 left-1/2 -translate-x-1/2 z-50 max-w-[92vw] bg-red-600 text-white text-sm rounded-xl shadow-lg px-4 py-3';
+            banner.textContent = 'アプリを起動できていません。ページを強制再読み込み（Mac: ⌘+Shift+R ／ Windows: Ctrl+Shift+R）してください。';
+            document.body.appendChild(banner);
+        }, 6000);
     </script>
 
 </body>

@@ -8,6 +8,16 @@
     border-left: 4px solid #dc2626;
 }
 
+/* スマホでシラバスリンクを表示に切り替えたとき（Tailwind の hidden を上書き） */
+#timetablePanel.show-syllabus-links .syllabus-link {
+    display: block;
+}
+
+/* 記録画面では、時間割専用のボタン（共有・授業コード・メニュー内の出力系など）を隠す */
+#toolbar.records-view .timetable-only {
+    display: none !important;
+}
+
 /* Custom scrollbar for table */
 .scrollbar-hide::-webkit-scrollbar {
     display: none;
@@ -36,6 +46,8 @@
     .md\:col-span-4,
     #tabContainer,
     #addMenuWrap,
+    #viewSwitch,
+    #recordsPanel,
     .flex.gap-2.pb-1,
     .mt-4.p-4.bg-blue-50 {
         display: none !important;
@@ -49,6 +61,11 @@
     }
 
     .grid {
+        display: block !important;
+    }
+
+    /* 記録画面を開いたまま印刷しても時間割が出るようにする */
+    #timetablePanel {
         display: block !important;
     }
 
