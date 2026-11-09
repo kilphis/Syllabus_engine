@@ -1,4 +1,4 @@
-import { timetableData, saveStore } from '../store.js';
+import { importSharedPlan, currentSelectedIds } from '../store.js';
 import { DEPT_CODE_MAP } from '../constants.js';
 
 export function checkForSharedPlan() {
@@ -9,9 +9,7 @@ export function checkForSharedPlan() {
         try {
             const sharedPlan = decompressPlan(sharedPlanCompressed);
             if (Array.isArray(sharedPlan) && confirm("共有された時間割が見つかりました。「共有」タブにインポートしますか？\n(既存の「共有」タブの内容は上書きされます)")) {
-                timetableData.plans["共有"] = sharedPlan;
-                timetableData.currentPlan = "共有";
-                saveStore();
+                importSharedPlan(sharedPlan);
                 // Remove query param from URL without reload
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
@@ -23,7 +21,7 @@ export function checkForSharedPlan() {
 }
 
 export function generateShareUrl() {
-    const currentData = timetableData.plans[timetableData.currentPlan];
+    const currentData = currentSelectedIds();
     if (!currentData || currentData.length === 0) {
         alert("共有する講義が選択されていません。");
         return;

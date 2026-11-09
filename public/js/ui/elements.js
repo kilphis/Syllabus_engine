@@ -1,3 +1,4 @@
+// DOM 参照の一括取得（main.js は body 末尾で読み込まれるため、この時点で DOM は揃っている）
 export const elements = {
     timetableGrid: document.getElementById('timetableGrid'),
     searchResults: document.getElementById('searchResults'),
@@ -10,12 +11,6 @@ export const elements = {
     tabContainer: document.getElementById('tabContainer'),
     resultsCount: document.getElementById('resultsCount'),
     strictModeToggle: document.getElementById('strictModeToggle'),
-    printHeader: document.getElementById('printHeader'),
-    printPlanName: document.getElementById('printPlanName'),
-    shareTwitter: document.getElementById('shareTwitter'),
-    shareLine: document.getElementById('shareLine'),
-    socialShare: document.getElementById('socialShare'),
-    shareSocial: document.getElementById('socialShare'),
     termButtons: document.querySelectorAll('.term-btn'),
     exportModal: document.getElementById('exportModal'),
     exportImage: document.getElementById('exportImage'),

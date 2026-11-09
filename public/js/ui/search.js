@@ -1,130 +1,100 @@
 import { elements } from './elements.js';
-import { isTermMatch } from '../utils/filters.js';
+import { isTermMatch, expandTerms } from '../utils/filters.js';
 import { getSyllabusUrl } from '../syllabus.js';
-import { TERM_MAP } from '../constants.js';
-import { timetableData, activeTerms, isStrictMode, allLectures } from '../store.js';
+import { activeTerms, isStrictMode, allLectures, currentSelectedIds, lectureKey } from '../store.js';
+import { esc } from '../utils/html.js';
 
-let displayLimit = 50;
+const PAGE_SIZE = 50;
+let displayLimit = PAGE_SIZE;
 
-export function handleSearch() {
-    const { searchInput, teacherFilter, deptFilter, gradeFilter, dayFilter, periodFilter, searchResults, resultsCount } = elements;
+// 現在のフォーム入力を検索条件として読み取る
+function readCriteria() {
+    const { searchInput, teacherFilter, deptFilter, gradeFilter, dayFilter, periodFilter } = elements;
+    return {
+        query: searchInput.value.toLowerCase(),
+        teacher: teacherFilter.value.toLowerCase(),
+        dept: deptFilter.value,
+        grade: gradeFilter.value,
+        day: dayFilter.value,
+        period: periodFilter.value,
+    };
+}
 
-    const query = searchInput.value.toLowerCase();
-    const teacherQuery = teacherFilter ? teacherFilter.value.toLowerCase() : '';
-    const deptVal = deptFilter.value;
-    const gradeVal = gradeFilter.value;
-    const dayVal = dayFilter.value;
-    const periodVal = periodFilter.value;
+function matches(l, c) {
+    // 1. 教員名（期間の選択状況に依存しない）
+    if (c.teacher !== '' && !(l.teacher && l.teacher.toLowerCase().includes(c.teacher))) return false;
 
-    const currentSelectedIds = timetableData.plans[timetableData.currentPlan];
-
-    // Prepare Effective Terms for Badge Display
-    let displayTerms = [];
-    if (isStrictMode) {
-        displayTerms = [...activeTerms];
-    } else {
-        activeTerms.forEach(t => {
-            displayTerms.push(t);
-            if (TERM_MAP[t]) displayTerms.push(...TERM_MAP[t]);
-        });
-        displayTerms = [...new Set(displayTerms)];
+    // 2. 期間（教員名指定があり期間未選択なら素通し）
+    if (activeTerms.length === 0) {
+        if (c.teacher === '') return false;
+    } else if (!isTermMatch(l.tags, activeTerms, isStrictMode)) {
+        return false;
     }
 
-    // Filter Logic
-    const filtered = allLectures.filter(l => {
-        // 1. Teacher filter (works independently of term selection)
-        const matchesTeacher = teacherQuery === '' ||
-            (l.teacher && l.teacher.toLowerCase().includes(teacherQuery));
-        if (!matchesTeacher) return false;
+    // 3. 科目名・所属・年次・曜日時限
+    if (c.query !== '' && !l.title.toLowerCase().includes(c.query)) return false;
+    if (c.dept !== '' && l.dept !== c.dept) return false;
+    if (c.grade !== '' && l.grade != c.grade) return false;
+    if (c.day !== '' || c.period !== '') {
+        return l.periods.some(p =>
+            (c.day === '' || p.day == c.day) && (c.period === '' || p.time == c.period));
+    }
+    return true;
+}
 
-        // 2. Term filter (skipped when teacher filter is active and no term selected)
-        if (teacherQuery === '') {
-            if (activeTerms.length === 0) return false;
-        }
-        if (activeTerms.length > 0 && !isTermMatch(l.tags, activeTerms, isStrictMode)) return false;
+function resultCard(l, isSelected, badgeTerms) {
+    const badges = (l.tags ?? []).filter(t => badgeTerms.has(t)).slice(0, 2).map(t =>
+        `<span class="inline-block bg-blue-600 text-white text-[10px] px-2 py-0.5 rounded-full mr-1 mb-1 font-bold">${esc(t)}</span>`
+    ).join('');
 
-        // 3. Text Search (科目名のみ)
-        const matchesQuery = query === '' || l.title.toLowerCase().includes(query);
+    return `
+        <div data-action="toggle-lecture" data-key="${esc(lectureKey(l))}"
+             class="p-3 border rounded-xl cursor-pointer transition-all duration-200 hover:border-blue-500 relative
+             ${isSelected ? 'bg-blue-100 border-blue-500' : 'bg-white border-slate-200'}">
+            ${isSelected ? '<span class="absolute top-2 right-2 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">追加済み</span>' : ''}
+            <div class="mb-1">${badges}</div>
+            <div class="text-sm font-bold text-slate-800">${esc(l.title)}</div>
+            <div class="text-xs text-slate-500">${esc(l.teacher)}</div>
+            <div class="text-xs text-slate-400 mt-1 flex gap-2 items-center">
+                <span>${esc(l.dept || '-')}</span>
+                <span>${l.grade ? esc(l.grade) + '年' : '-'}</span>
+                <a href="${esc(getSyllabusUrl(l))}" target="_blank" rel="noopener" class="text-blue-600 hover:underline ml-auto">シラバス ></a>
+            </div>
+        </div>`;
+}
 
-        // 4. Attribute Filters
-        const matchesDept = deptVal === '' || l.dept === deptVal;
-        const matchesGrade = gradeVal === '' || l.grade == gradeVal;
-
-        const matchesDayPeriod = (dayVal === '' && periodVal === '') ||
-            l.periods.some(p =>
-                (dayVal === '' || p.day == dayVal) &&
-                (periodVal === '' || p.time == periodVal)
-            );
-
-        return matchesQuery && matchesDept && matchesGrade && matchesDayPeriod;
-    });
-
-    const totalCount = filtered.length;
+export function renderSearch() {
+    const { searchResults, resultsCount } = elements;
+    const criteria = readCriteria();
+    const filtered = allLectures.filter(l => matches(l, criteria));
     const showing = filtered.slice(0, displayLimit);
 
-    if (resultsCount) {
-        resultsCount.innerText = `${totalCount}件中 ${showing.length}件表示`;
-    }
+    resultsCount.textContent = `${filtered.length}件中 ${showing.length}件表示`;
 
-    if (totalCount === 0) {
+    if (filtered.length === 0) {
         searchResults.innerHTML = `<div class="text-center text-slate-400 py-8">条件に一致する講義が見つかりませんでした</div>`;
         return;
     }
 
-    // Render Results
-    let html = showing.map(l => {
-        const compositeKey = `${l.dept}_${l.id}`;
-        const isSelected = currentSelectedIds.includes(compositeKey);
-        const url = getSyllabusUrl(l);
+    const selectedIds = new Set(currentSelectedIds());
+    const badgeTerms = isStrictMode ? new Set(activeTerms) : expandTerms(activeTerms);
 
-        // Badge
-        const matchingTags = l.tags ? l.tags.filter(t => displayTerms.includes(t)) : [];
-        const badgeHtml = matchingTags.slice(0, 2).map(t =>
-            `<span class="inline-block bg-blue-600 text-white text-[10px] px-2 py-0.5 rounded-full mr-1 mb-1 font-bold">${t}</span>`
-        ).join('');
-
-        return `
-        <div onclick="window.toggleLecture('${l.dept}', '${l.id}')" 
-             class="p-3 border rounded-xl cursor-pointer transition-all duration-200 hover:border-blue-500 relative 
-             ${isSelected ? 'bg-blue-100 border-blue-500' : 'bg-white border-slate-200'}">
-            
-            ${isSelected ? '<span class="absolute top-2 right-2 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">追加済み</span>' : ''}
-            
-            <div class="mb-1">${badgeHtml}</div>
-            <div class="text-sm font-bold text-slate-800">${l.title}</div>
-            <div class="text-xs text-slate-500">${l.teacher || ''}</div>
-            <div class="text-xs text-slate-400 mt-1 flex gap-2 items-center">
-                <span>${l.dept || '-'}</span>
-                <span>${l.grade ? l.grade + '年' : '-'}</span>
-                <a href="${url}" target="_blank" onclick="event.stopPropagation()" class="text-blue-600 hover:underline ml-auto">シラバス ></a>
-            </div>
-        </div>
-        `;
-    }).join('');
-
-    // Show More Button
-    if (totalCount > displayLimit) {
+    let html = showing.map(l => resultCard(l, selectedIds.has(lectureKey(l)), badgeTerms)).join('');
+    if (filtered.length > displayLimit) {
         html += `
-            <button onclick="window.loadMore()" class="w-full py-2 text-blue-600 font-bold hover:bg-blue-50 rounded-lg transition-colors">
-                さらに表示 (${totalCount - displayLimit}件)
-            </button>
-        `;
+            <button data-action="load-more" class="w-full py-2 text-blue-600 font-bold hover:bg-blue-50 rounded-lg transition-colors">
+                さらに表示 (${filtered.length - displayLimit}件)
+            </button>`;
     }
-
     searchResults.innerHTML = html;
 }
 
 export function loadMore() {
-    displayLimit += 50;
-    handleSearch();
+    displayLimit += PAGE_SIZE;
+    renderSearch();
 }
 
 export function resetPagination() {
-    displayLimit = 50;
-    handleSearch();
+    displayLimit = PAGE_SIZE;
+    renderSearch();
 }
-
-// Expose to window for HTML onclick handlers
-window.handleSearch = handleSearch;
-window.loadMore = loadMore;
-window.resetPagination = resetPagination;

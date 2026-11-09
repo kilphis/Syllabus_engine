@@ -19,6 +19,3 @@ export function printTimetable() {
         document.title = originalTitle;
     }, 1000);
 }
-
-// Assign to window for global access (as per requirement)
-window.printTimetable = printTimetable;

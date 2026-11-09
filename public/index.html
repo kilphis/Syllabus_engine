@@ -42,32 +42,32 @@
                         <label class="block text-sm font-bold">期間を選択 (複数選択可)</label>
                         <label class="flex items-center cursor-pointer text-xs text-slate-600 hover:text-slate-800">
                             <input type="checkbox" id="strictModeToggle" class="mr-1 accent-blue-600"
-                                onchange="if(window.toggleStrictMode) window.toggleStrictMode()">
+                                data-change-action="toggle-strict">
                             <span>期間を厳密に選択する</span>
                         </label>
                     </div>
 
                     <!-- Term Filters (Multi-Select Toggles) -->
                     <div class="flex flex-wrap gap-2 mb-4" id="termButtons">
-                        <button onclick="if(window.toggleSemester) window.toggleSemester('前期')" data-term="前期"
+                        <button data-action="toggle-term" data-term="前期"
                             class="term-btn px-3 py-1 rounded-full text-sm font-medium transition-colors border">前期</button>
-                        <button onclick="if(window.toggleSemester) window.toggleSemester('後期')" data-term="後期"
+                        <button data-action="toggle-term" data-term="後期"
                             class="term-btn px-3 py-1 rounded-full text-sm font-medium transition-colors border">後期</button>
-                        <button onclick="if(window.toggleTerm) window.toggleTerm('T1')" data-term="T1"
+                        <button data-action="toggle-term" data-term="T1"
                             class="term-btn px-3 py-1 rounded-full text-sm font-medium transition-colors border">T1</button>
-                        <button onclick="if(window.toggleTerm) window.toggleTerm('T2')" data-term="T2"
+                        <button data-action="toggle-term" data-term="T2"
                             class="term-btn px-3 py-1 rounded-full text-sm font-medium transition-colors border">T2</button>
-                        <button onclick="if(window.toggleTerm) window.toggleTerm('T3')" data-term="T3"
+                        <button data-action="toggle-term" data-term="T3"
                             class="term-btn px-3 py-1 rounded-full text-sm font-medium transition-colors border">T3</button>
-                        <button onclick="if(window.toggleTerm) window.toggleTerm('T4')" data-term="T4"
+                        <button data-action="toggle-term" data-term="T4"
                             class="term-btn px-3 py-1 rounded-full text-sm font-medium transition-colors border">T4</button>
-                        <button onclick="if(window.toggleTerm) window.toggleTerm('集中')" data-term="集中"
+                        <button data-action="toggle-term" data-term="集中"
                             class="term-btn px-3 py-1 rounded-full text-sm font-medium transition-colors border">集中</button>
                     </div>
 
                     <div class="flex justify-between items-center mb-2">
                         <label class="block text-sm font-bold">講義を検索</label>
-                        <button onclick="if(window.resetTimetable) window.resetTimetable()"
+                        <button data-action="reset-timetable"
                             class="text-xs text-red-500 border border-red-200 px-2 py-1 rounded hover:bg-red-50 transition-colors">
                             リセット
                         </button>
@@ -126,38 +126,38 @@
                         <!-- Tabs will be injected here -->
                     </div>
                     <div class="flex    flex-wrap justify-end gap-2 pb-1">
-                        <button onclick="if(window.generateShareUrl) window.generateShareUrl()"
+                        <button data-action="share-url"
                             class="text-xs flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-1 rounded transition-colors"
                             title="URLで共有">
                             <span>🔗</span> 共有
                         </button>
-                        <button onclick="if(window.printTimetable) window.printTimetable()"
+                        <button data-action="print"
                             class="text-xs flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-1 rounded transition-colors"
                             title="印刷 / PDF保存">
-                            <span>️🍎</span> 印刷/PDF保存
+                            <span>🖨️</span> 印刷/PDF保存
                         </button>
                         <!--画像保存ボタンがあった場所-->
-                        <button onclick="if(window.showCourseCodeList) window.showCourseCodeList()"
+                        <button data-action="show-course-codes"
                             class="text-xs flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-1 rounded transition-colors"
                             title="授業コード一覧を表示">
                             <span>📋</span> 授業コード
                         </button>
-                        <button id="wallpaperBtn"
+                        <button id="wallpaperBtn" data-action="wallpaper"
                             class="text-xs flex items-center gap-1 bg-blue-100 hover:bg-blue-200 text-blue-600 px-2 py-1 rounded transition-colors"
                             title="壁紙として保存">
                             <span>📱</span> 壁紙保存
                         </button>
-                        <button onclick="if(window.exportToICal) window.exportToICal()"
+                        <button data-action="export-ical"
                             class="text-xs flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-1 rounded transition-colors"
                             title="Googleカレンダー等に取り込めるファイルを保存">
                             <span>📅</span> カレンダー(.ics)
                         </button>
-                        <button onclick="if(window.showDeadlineSettings) window.showDeadlineSettings()"
+                        <button data-action="show-deadlines"
                             class="text-xs flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-1 rounded transition-colors"
                             title="Obsidianタスクの課題締切タイミングを講義ごとに設定">
                             <span>🗓️</span> 課題の締切
                         </button>
-                        <button onclick="if(window.exportToObsidian) window.exportToObsidian()"
+                        <button data-action="export-obsidian"
                             class="text-xs flex items-center gap-1 bg-purple-100 hover:bg-purple-200 text-purple-600 px-2 py-1 rounded transition-colors"
                             title="Obsidian保管庫に置けるノートを保存">
                             <span>🟣</span> Obsidian(.md)
@@ -195,7 +195,7 @@
         <div class="bg-white p-6 rounded-2xl max-w-2xl w-full max-h-[80vh] flex flex-col mx-4">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-bold text-slate-800">授業コード一覧</h2>
-                <button onclick="document.getElementById('courseCodeModal').classList.add('hidden')"
+                <button data-action="close-modal" data-modal="courseCodeModal"
                     class="text-slate-400 hover:text-slate-600 text-xl">✕</button>
             </div>
             <div class="overflow-x-auto overflow-y-auto flex-1 mb-4">
@@ -217,7 +217,7 @@
                 <p class="text-xs text-slate-400 mb-2">CSV形式（曜日,時限,授業コード,科目名）</p>
                 <div class="flex gap-2 items-start">
                     <pre id="courseCodeText" class="flex-1 bg-slate-100 rounded px-3 py-2 text-xs font-mono text-slate-700 overflow-x-auto whitespace-pre"></pre>
-                    <button id="copyCodesBtn" onclick="window.copyCourseCodeText()"
+                    <button id="copyCodesBtn" data-action="copy-course-codes"
                         class="shrink-0 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-4 py-2 rounded-lg transition-colors">
                         コピー
                     </button>
@@ -231,7 +231,7 @@
         <div class="bg-white p-6 rounded-2xl max-w-2xl w-full max-h-[80vh] flex flex-col mx-4">
             <div class="flex justify-between items-center mb-1">
                 <h2 class="text-xl font-bold text-slate-800">課題の締切タイミング</h2>
-                <button onclick="document.getElementById('deadlineModal').classList.add('hidden')"
+                <button data-action="close-modal" data-modal="deadlineModal"
                     class="text-slate-400 hover:text-slate-600 text-xl">✕</button>
             </div>
             <p class="text-xs text-slate-400 mb-4">講義ごとに選んでおくと、Obsidian(.md) の毎週タスクに締切（📅）が付きます。設定は自動保存されます。</p>
@@ -244,7 +244,7 @@
         <div class="bg-white p-6 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto relative">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-bold text-slate-800">画像として保存</h2>
-                <button onclick="document.getElementById('exportModal').classList.add('hidden')"
+                <button data-action="close-modal" data-modal="exportModal"
                     class="text-slate-400 hover:text-slate-600">
                     ✕
                 </button>
@@ -254,7 +254,7 @@
             </div>
             <div class="text-center">
                 <p class="text-sm text-slate-500 mb-4">画像を長押しまたは右クリックして保存してください。</p>
-                <button onclick="document.getElementById('exportModal').classList.add('hidden')"
+                <button data-action="close-modal" data-modal="exportModal"
                     class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-lg font-bold transition-colors">
                     閉じる
                 </button>
@@ -292,12 +292,12 @@
     <footer class="mt-12 py-10 border-t border-slate-200 bg-white/50 backdrop-blur-sm print:hidden">
         <div class="max-w-7xl mx-auto px-4 text-center">
             <div class="flex justify-center flex-wrap gap-8 mb-6">
-                <a href="https://github.com/kilphis/Syllabus_engine" target="_blank"
+                <a href="https://github.com/kilphis/Syllabus_engine" target="_blank" rel="noopener"
                     class="flex items-center gap-2 text-slate-500 hover:text-blue-600 transition-colors font-medium">
                     <span class="text-lg">GitHub</span>
                 </a>
                 <a href="https://docs.google.com/forms/d/e/1FAIpQLSeck0NLwS5-R0kFzdxHvJlPDCKxDreAJfMhHWmTu7YPHr-Lnw/viewform?usp=publish-editor"
-                    target="_blank"
+                    target="_blank" rel="noopener"
                     class="flex items-center gap-2 text-slate-500 hover:text-blue-600 transition-colors font-medium">
                     <span class="text-lg">お問い合わせはこちら | google.com/forms</span>
                 </a>
